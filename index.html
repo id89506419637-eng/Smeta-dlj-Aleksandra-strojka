@@ -795,6 +795,16 @@
                     Оценки включают запас 10% на трубы и фитинги по спецификации.<br>
                     Окончательная смета формируется только после детальных замеров на объекте.
                 </div>
+                <div style="border-top:1px solid #ddd;padding-top:14px;margin-top:18px;">
+                    <div style="color:#3b82f6;font-weight:700;font-size:13px;margin-bottom:6px">Наши преимущества и гарантии:</div>
+                    <ul style="font-size:11px;color:#475569;line-height:1.5;margin:0;padding-left:15px;">
+                        <li><b>Фиксируем стоимость:</b> цена на работы в договоре не меняется.</li>
+                        <li><b>Проверенные материалы:</b> работаем с Rehau, TECE, Stout, Valtec.</li>
+                        <li><b>Профессиональный инструмент:</b> надежный монтаж без пыли и кустарных скруток.</li>
+                        <li><b>Официальная гарантия:</b> 3 года на все наши соединения и системы "под ключ".</li>
+                        <li><b>Прозрачность:</b> предоставляем полный фото- и видеоотчет скрытых работ перед стяжкой.</li>
+                    </ul>
+                </div>
             </div>`;
             document.body.appendChild(smetaDiv);
 
@@ -854,7 +864,25 @@
                 });
             }
 
-            doc.save('Smeta.pdf');
+            // Пытаемся запустить нативное iOS/Android окно отправки файла (Whatsapp/Telegram)
+            const pdfBlob = doc.output('blob');
+            const file = new File([pdfBlob], 'Smeta_Otoplenie.pdf', { type: 'application/pdf' });
+            
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Смета (Отопление/Вода)',
+                        text: 'Высылаю предварительную смету на инженерные системы.'
+                    });
+                } catch (shareErr) {
+                    console.log('Share canceled or failed:', shareErr);
+                    // Фолбэк на обычное скачивание, если пользователь отменил окно শেринга
+                }
+            } else {
+                // Если браузер ПК не поддерживает Share API, просто скачиваем
+                doc.save('Smeta_Otoplenie.pdf');
+            }
 
         } catch(err) {
             console.error('PDF error:', err);
