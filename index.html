@@ -432,7 +432,10 @@
             Оценки включают запас 10% на трубы и фитинги по спецификации. Окончательная смета формируется только после детальных замеров на объекте.
         </div>
 
-        <button type="button" class="btn btn-success" id="pdfBtn">Сохранить смету (PDF)</button>
+        <div style="display:flex; gap:10px; margin-top:15px; flex-direction:column;">
+            <button type="button" class="btn btn-success" id="shareBtn" style="background:#10b981; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);">📋 Скопировать текст в WhatsApp</button>
+            <button type="button" class="btn btn-primary" id="pdfBtn" style="background:#3b82f6; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);">📄 Отправить как PDF</button>
+        </div>
     </div>
 
 </div>
@@ -704,6 +707,23 @@
 * Окончательная смета формируется только после детальных замеров на объекте.`;
     });
 
+    // Обработчик копирования текста (восстановлен)
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('shareBtn');
+        try {
+            await navigator.clipboard.writeText(targetTextForShare);
+            const origText = btn.innerText;
+            btn.innerText = 'Скопировано ✔ (вставь в чат)';
+            btn.style.background = '#059669';
+            setTimeout(() => {
+                btn.innerText = origText;
+                btn.style.background = '#10b981';
+            }, 3000);
+        } catch (err) {
+            alert('Не удалось скопировать текст. Выделите его вручную.');
+        }
+    });
+
     // Фото для портфолио
     const portfolioPhotos = [
         '54e11dc3-bf56-48ec-9eec-c2c01455548d.webp',
@@ -865,22 +885,27 @@
             }
 
             // Пытаемся запустить нативное iOS/Android окно отправки файла (Whatsapp/Telegram)
-            const pdfBlob = doc.output('blob');
-            const file = new File([pdfBlob], 'Smeta_Otoplenie.pdf', { type: 'application/pdf' });
-            
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                try {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Смета (Отопление/Вода)',
-                        text: 'Высылаю предварительную смету на инженерные системы.'
-                    });
-                } catch (shareErr) {
-                    console.log('Share canceled or failed:', shareErr);
-                    // Фолбэк на обычное скачивание, если пользователь отменил окно শেринга
+            try {
+                const pdfBlob = doc.output('blob');
+                const file = new File([pdfBlob], 'Smeta_Otoplenie.pdf', { type: 'application/pdf' });
+                
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Смета (Отопление/Вода)',
+                            text: 'Высылаю предварительную смету на инженерные системы.'
+                        });
+                    } catch (shareErr) {
+                        console.log('Share failed, reverting to download:', shareErr);
+                        doc.save('Smeta_Otoplenie.pdf');
+                    }
+                } else {
+                    doc.save('Smeta_Otoplenie.pdf');
                 }
-            } else {
-                // Если браузер ПК не поддерживает Share API, просто скачиваем
+            } catch (fileErr) {
+                // Фолбэк, если браузер (старый iOS Safari) не разрешает конструктор File
+                console.log('File constructor failed:', fileErr);
                 doc.save('Smeta_Otoplenie.pdf');
             }
 
