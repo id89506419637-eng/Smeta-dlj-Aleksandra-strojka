@@ -704,153 +704,165 @@
 * Окончательная смета формируется только после детальных замеров на объекте.`;
     });
 
-    // Генерация PDF через печать (работает офлайн, без CDN)
-    document.getElementById('pdfBtn').addEventListener('click', () => {
-        const area = getNum('area');
-        const floors = getNum('floors');
-        const roomLabel = document.querySelector('#roomType option:checked').text;
-        const insulLabel = document.querySelector('#insulation option:checked').text;
-        const totalText = document.getElementById('res-total').innerText;
-        const timeText = document.getElementById('res-time').innerText;
-        const eqTotal = document.getElementById('res-equipment').innerText;
-        const matTotal = document.getElementById('res-materials').innerText;
-        const workTotal = document.getElementById('res-work').innerText;
+    // Фото для портфолио
+    const portfolioPhotos = [
+        '54e11dc3-bf56-48ec-9eec-c2c01455548d.webp',
+        '6b223ef3-5553-4e87-b79e-05ba17ef25bd.webp',
+        'a1849596-6d77-48d0-ac3e-f4388d03a0db.webp',
+        'ab320f43-b91a-4734-ac3a-592bcaee2e8b.webp'
+    ];
 
-        let paramsHtml = `
-            <tr><td><b>Тип объекта:</b> ${roomLabel}</td><td><b>Площадь:</b> ${area} м²</td></tr>
-            <tr><td><b>Этажей:</b> ${floors}</td><td><b>Утепление:</b> ${insulLabel}</td></tr>`;
-        if (getCheck('checkHeating')) {
-            paramsHtml += `<tr><td colspan="2"><b>Тип отопления:</b> ${document.querySelector('#heatingType option:checked').text}</td></tr>`;
-        }
-        if (getCheck('checkBoiler')) {
-            paramsHtml += `<tr><td colspan="2"><b>Котёл:</b> ${document.querySelector('#boilerType option:checked').text} (${getNum('boilerContours')} конт.)</td></tr>`;
-        }
+    function loadImageAsDataUrl(src) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const c = document.createElement('canvas');
+                const maxW = 700;
+                const scale = img.naturalWidth > maxW ? maxW / img.naturalWidth : 1;
+                c.width = img.naturalWidth * scale;
+                c.height = img.naturalHeight * scale;
+                c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                resolve(c.toDataURL('image/jpeg', 0.75));
+            };
+            img.onerror = () => resolve(null);
+            img.src = src;
+        });
+    }
 
-        function getListHtml(listId) {
-            let html = '';
-            document.getElementById(listId).querySelectorAll('div').forEach(item => {
-                html += '<div style="padding:2px 0;color:#555;font-size:12px">' + item.innerText + '</div>';
+    // Генерация PDF (jsPDF + html2canvas)
+    document.getElementById('pdfBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('pdfBtn');
+        const origText = btn.innerText;
+        btn.innerText = 'Формирую PDF...';
+        btn.disabled = true;
+
+        try {
+            const area = getNum('area');
+            const floors = getNum('floors');
+            const roomLabel = document.querySelector('#roomType option:checked').text;
+            const insulLabel = document.querySelector('#insulation option:checked').text;
+            const totalText = document.getElementById('res-total').innerText;
+            const timeText = document.getElementById('res-time').innerText;
+            const eqTotal = document.getElementById('res-equipment').innerText;
+            const matTotal = document.getElementById('res-materials').innerText;
+            const workTotal = document.getElementById('res-work').innerText;
+
+            let paramsRows = `<b>Тип объекта:</b> ${roomLabel} &nbsp; | &nbsp; <b>Площадь:</b> ${area} м²<br>
+                <b>Этажей:</b> ${floors} &nbsp; | &nbsp; <b>Утепление:</b> ${insulLabel}`;
+            if (getCheck('checkHeating')) {
+                paramsRows += `<br><b>Тип отопления:</b> ${document.querySelector('#heatingType option:checked').text}`;
+            }
+            if (getCheck('checkBoiler')) {
+                paramsRows += `<br><b>Котёл:</b> ${document.querySelector('#boilerType option:checked').text} (${getNum('boilerContours')} конт.)`;
+            }
+
+            function grabList(listId) {
+                let h = '';
+                document.getElementById(listId).querySelectorAll('div').forEach(el => {
+                    h += `<div style="padding:2px 0 2px 8px;color:#555;font-size:11px">${el.innerText}</div>`;
+                });
+                return h;
+            }
+
+            // HTML-шаблон сметы (только текст, без фото)
+            const smetaDiv = document.createElement('div');
+            smetaDiv.style.cssText = 'position:absolute;left:0;top:0;z-index:-1;opacity:0;pointer-events:none';
+            smetaDiv.innerHTML = `
+            <div style="font-family:Arial,sans-serif;width:794px;padding:45px 50px;background:#fff;color:#1e293b">
+                <h1 style="text-align:center;font-size:24px;margin:0 0 4px">Предварительная смета</h1>
+                <p style="text-align:center;color:#999;font-size:12px;margin:0 0 22px">${new Date().toLocaleDateString('ru-RU')}</p>
+                <div style="border-top:2px solid #3b82f6;padding-top:14px;margin-bottom:18px">
+                    <div style="color:#3b82f6;font-weight:700;font-size:14px;margin-bottom:8px">Параметры объекта</div>
+                    <div style="font-size:12px;line-height:1.6">${paramsRows}</div>
+                </div>
+                <div style="border-top:2px solid #3b82f6;padding-top:12px;margin-bottom:12px">
+                    <div style="display:flex;justify-content:space-between"><span style="color:#3b82f6;font-weight:700;font-size:13px">Оборудование</span><span style="font-weight:700;font-size:13px">${eqTotal}</span></div>
+                    ${grabList('list-equipment')}
+                </div>
+                <div style="border-top:1px solid #ddd;padding-top:10px;margin-bottom:12px">
+                    <div style="display:flex;justify-content:space-between"><span style="color:#3b82f6;font-weight:700;font-size:13px">Материалы</span><span style="font-weight:700;font-size:13px">${matTotal}</span></div>
+                    ${grabList('list-materials')}
+                </div>
+                <div style="border-top:1px solid #ddd;padding-top:10px;margin-bottom:18px">
+                    <div style="display:flex;justify-content:space-between"><span style="color:#3b82f6;font-weight:700;font-size:13px">Монтажные работы</span><span style="font-weight:700;font-size:13px">${workTotal}</span></div>
+                    ${grabList('list-work')}
+                </div>
+                <div style="border-top:3px solid #3b82f6;padding:16px 0;text-align:center">
+                    <div style="font-size:22px;font-weight:700;color:#3b82f6;margin-bottom:4px">ИТОГО: ${totalText}</div>
+                    <div style="font-size:13px;color:#475569">Ориентировочный срок: ${timeText}</div>
+                </div>
+                <div style="background:#eff6ff;border-radius:6px;padding:10px 14px;margin-top:16px;font-size:11px;color:#1e40af">
+                    Оценки включают запас 10% на трубы и фитинги по спецификации.<br>
+                    Окончательная смета формируется только после детальных замеров на объекте.
+                </div>
+            </div>`;
+            document.body.appendChild(smetaDiv);
+
+            await new Promise(r => setTimeout(r, 150));
+
+            const canvas = await html2canvas(smetaDiv.firstElementChild, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                logging: false
             });
-            return html;
+            document.body.removeChild(smetaDiv);
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            // Страница 1: смета
+            const imgData = canvas.toDataURL('image/jpeg', 0.92);
+            const pW = 210;
+            const pH = 297;
+            const imgH = (canvas.height * pW) / canvas.width;
+            doc.addImage(imgData, 'JPEG', 0, 0, pW, Math.min(imgH, pH));
+
+            // Страница 2: фото работ
+            const photos = [];
+            for (const src of portfolioPhotos) {
+                const dataUrl = await loadImageAsDataUrl(src);
+                if (dataUrl) photos.push(dataUrl);
+            }
+
+            if (photos.length > 0) {
+                doc.addPage();
+
+                // Заголовок через canvas (кириллица)
+                const tc = document.createElement('canvas');
+                tc.width = 800; tc.height = 50;
+                const tctx = tc.getContext('2d');
+                tctx.fillStyle = '#fff';
+                tctx.fillRect(0, 0, 800, 50);
+                tctx.font = 'bold 26px Arial';
+                tctx.fillStyle = '#1e293b';
+                tctx.textAlign = 'center';
+                tctx.fillText('Примеры выполненных работ', 400, 35);
+                doc.addImage(tc.toDataURL('image/png'), 'PNG', 0, 5, pW, 12);
+
+                const margin = 15;
+                const gap = 5;
+                const imgW = (pW - margin * 2 - gap) / 2;
+                const imgHt = imgW * 0.72;
+                let startY = 24;
+
+                photos.forEach((dataUrl, i) => {
+                    const col = i % 2;
+                    const row = Math.floor(i / 2);
+                    const x = margin + col * (imgW + gap);
+                    const y = startY + row * (imgHt + gap);
+                    doc.addImage(dataUrl, 'JPEG', x, y, imgW, imgHt);
+                });
+            }
+
+            doc.save('Smeta.pdf');
+
+        } catch(err) {
+            console.error('PDF error:', err);
+            alert('Ошибка при создании PDF: ' + err.message);
+        } finally {
+            btn.innerText = origText;
+            btn.disabled = false;
         }
-
-        // Определяем путь к фото (рядом с HTML)
-        const photos = [
-            '54e11dc3-bf56-48ec-9eec-c2c01455548d.webp',
-            '6b223ef3-5553-4e87-b79e-05ba17ef25bd.webp',
-            'a1849596-6d77-48d0-ac3e-f4388d03a0db.webp',
-            'ab320f43-b91a-4734-ac3a-592bcaee2e8b.webp'
-        ];
-
-        let photosHtml = photos.map(p =>
-            `<img src="${p}" style="width:48%;border-radius:6px;border:1px solid #ccc;object-fit:cover;aspect-ratio:4/3">`
-        ).join('\n');
-
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<title>Смета</title>
-<style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: Arial, sans-serif; color: #1e293b; padding: 30px 40px; }
-    h1 { text-align:center; font-size:24px; margin-bottom:4px; }
-    .date { text-align:center; color:#94a3b8; font-size:13px; margin-bottom:25px; }
-    .section-title { color:#3b82f6; font-size:15px; font-weight:700; margin-bottom:4px; }
-    .divider { border-top:2px solid #3b82f6; padding-top:14px; margin-bottom:16px; }
-    .divider-light { border-top:1px solid #ddd; padding-top:12px; margin-bottom:16px; }
-    .row { display:flex; justify-content:space-between; margin-bottom:4px; }
-    .row-total { font-weight:700; font-size:15px; }
-    .total-block { border-top:3px solid #3b82f6; padding:18px 0; text-align:center; margin-top:8px; }
-    .total-price { font-size:22px; font-weight:700; color:#3b82f6; margin-bottom:4px; }
-    .total-time { font-size:13px; color:#475569; }
-    .note { background:#eff6ff; border-radius:6px; padding:10px 14px; margin-top:16px; font-size:11px; color:#1e40af; }
-    table.params { width:100%; margin-bottom:8px; }
-    table.params td { padding:3px 0; font-size:13px; }
-    .page-break { page-break-before:always; }
-    .photos-title { text-align:center; font-size:20px; margin-bottom:20px; margin-top:10px; }
-    .photos-grid { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
-    .photos-grid img { width:48%; border-radius:6px; border:1px solid #ccc; }
-    @media print {
-        body { padding: 20px 30px; }
-        .no-print { display:none; }
-    }
-</style>
-</head>
-<body>
-
-<h1>Предварительная смета</h1>
-<div class="date">${new Date().toLocaleDateString('ru-RU')}</div>
-
-<div class="divider">
-    <div class="section-title">Параметры объекта</div>
-    <table class="params">${paramsHtml}</table>
-</div>
-
-<div class="divider">
-    <div class="row">
-        <span class="section-title">Оборудование</span>
-        <span class="row-total">${eqTotal}</span>
-    </div>
-    ${getListHtml('list-equipment')}
-</div>
-
-<div class="divider-light">
-    <div class="row">
-        <span class="section-title">Материалы</span>
-        <span class="row-total">${matTotal}</span>
-    </div>
-    ${getListHtml('list-materials')}
-</div>
-
-<div class="divider-light">
-    <div class="row">
-        <span class="section-title">Монтажные работы</span>
-        <span class="row-total">${workTotal}</span>
-    </div>
-    ${getListHtml('list-work')}
-</div>
-
-<div class="total-block">
-    <div class="total-price">ИТОГО: ${totalText}</div>
-    <div class="total-time">Ориентировочный срок: ${timeText}</div>
-</div>
-
-<div class="note">
-    Оценки включают запас 10% на трубы и фитинги по спецификации.<br>
-    Окончательная смета формируется только после детальных замеров на объекте.
-</div>
-
-<div class="page-break"></div>
-<h2 class="photos-title">Примеры выполненных работ</h2>
-<div class="photos-grid">
-    ${photosHtml}
-</div>
-
-<script>
-    // Ждём загрузки фото, потом печатаем
-    const imgs = document.querySelectorAll('.photos-grid img');
-    let loaded = 0;
-    function checkAllLoaded() {
-        loaded++;
-        if (loaded >= imgs.length) {
-            setTimeout(() => window.print(), 300);
-        }
-    }
-    imgs.forEach(img => {
-        if (img.complete) checkAllLoaded();
-        else {
-            img.onload = checkAllLoaded;
-            img.onerror = checkAllLoaded;
-        }
-    });
-    if (imgs.length === 0) setTimeout(() => window.print(), 300);
-<\/script>
-
-</body>
-</html>`);
-        printWindow.document.close();
     });
 </script>
 </body>
