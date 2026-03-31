@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: rgba(226, 232, 240, 0.8);
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            transition: transform 0.2s ease;
+        }
+
+        h2.section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #334155;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: #fff;
+            color: var(--text-main);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        input[type="number"]:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .checkbox-group input {
+            margin-top: 3px;
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .checkbox-text {
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+            margin-top: 15px;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        #result-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .total-price {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            margin: 15px 0;
+            padding: 15px 0;
+            border-top: 1px dashed #cbd5e1;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+
+        .breakdown {
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown-label {
+            color: var(--text-muted);
+        }
+
+        .breakdown-value {
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.85rem;
+            color: #1e40af;
+            margin-top: 15px;
+        }
+
+        /* Floating label specific to dynamic fields */
+        .dynamic-field {
+            animation: slideDown 0.3s ease-out;
+            transform-origin: top;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: scaleY(0.9); }
+            to { opacity: 1; transform: scaleY(1); }
+        }
+
+        .breakdown-sublist {
+            padding-left: 10px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+        .breakdown-sublist div {
+            padding: 3px 0;
+            border-bottom: 1px dashed rgba(226, 232, 240, 0.5);
+        }
+        .breakdown-sublist div:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Калькулятор</h1>
+        <p class="subtitle">Предварительный расчёт для клиента</p>
+    </header>
+
+    <form id="calc-form">
+        <!-- Блок 0: Что считаем -->
+        <div class="card" id="scopeCard">
+            <h2 class="section-title">Виды работ</h2>
+            <label class="checkbox-group">
+                <input type="checkbox" id="checkHeating" checked>
+                <span class="checkbox-text">Отопление</span>
+            </label>
+            <label class="checkbox-group">
+                <input type="checkbox" id="checkBoiler" checked>
+                <span class="checkbox-text">Котельная</span>
+            </label>
+            <label class="checkbox-group">
+                <input type="checkbox" id="checkPlumbing" checked>
+                <span class="checkbox-text">Водоснабжение и Канализация</span>
+            </label>
+        </div>
+
+        <!-- Блок 1: Общие данные -->
+        <div class="card">
+            <h2 class="section-title">1. Общие данные</h2>
+            <div class="form-group">
+                <label for="roomType">Тип объекта</label>
+                <select id="roomType">
+                    <option value="house" selected>Коттедж / Жилой дом</option>
+                    <option value="garage">Автосервис / Гараж</option>
+                    <option value="hangar">Склад / Помещение свободного назначения</option>
+                </select>
+            </div>
+            <div class="form-group dynamic-field hidden" id="heightField">
+                <label for="ceilingHeight">Высота потолка (м)</label>
+                <input type="number" id="ceilingHeight" value="3.0" min="2" step="0.5">
+            </div>
+            <div class="form-group">
+                <label for="area">Общая площадь (м²)</label>
+                <input type="number" id="area" value="100" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="floors">Количество этажей</label>
+                <select id="floors">
+                    <option value="1">1 этаж</option>
+                    <option value="2">2 этажа</option>
+                    <option value="3">3 этажа</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="insulation">Уровень утепления</label>
+                <select id="insulation">
+                    <option value="good">Хорошее (новые дома)</option>
+                    <option value="average" selected>Среднее</option>
+                    <option value="poor">Плохое (старый фонд)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Блок 2: Отопление -->
+        <div class="card" id="heatingCard">
+            <h2 class="section-title">2. Отопление</h2>
+            <div class="form-group">
+                <label for="heatingType">Тип отопления</label>
+                <select id="heatingType">
+                    <option value="radiators">Только радиаторы</option>
+                    <option value="floor">Только тёплый пол</option>
+                    <option value="combo" selected>Комбинированное (Радиаторы + ТП)</option>
+                    <option value="volcano">Воздушное (Вулканы / Тепловентиляторы)</option>
+                </select>
+            </div>
+            
+            <div class="form-group dynamic-field" id="windowsField">
+                <label for="windows">Количество окон (для радиаторов)</label>
+                <input type="number" id="windows" value="5" min="0">
+            </div>
+
+            <div class="form-group dynamic-field" id="floorAreaField">
+                <label for="floorArea">Площадь теплого пола (м²)</label>
+                <input type="number" id="floorArea" value="50" min="0">
+            </div>
+
+            <div class="form-group dynamic-field hidden" id="volcanoField">
+                <label for="volcanos">Количество аппаратов Volcano (шт)</label>
+                <input type="number" id="volcanos" value="2" min="1">
+            </div>
+        </div>
+
+        <!-- Блок 3: Котельная -->
+        <div class="card" id="boilerCard">
+            <h2 class="section-title">3. Котельная</h2>
+            <div class="form-group">
+                <label for="boilerType">Тип котла</label>
+                <select id="boilerType">
+                    <option value="gas">Газовый</option>
+                    <option value="electric">Электрический</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="boilerContours">Контурность (ГВС)</label>
+                <select id="boilerContours">
+                    <option value="1">1-контурный (только отопление)</option>
+                    <option value="2" selected>2-контурный (отопление + водоснабжение)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Блок 4: Водоснабжение и Канализация -->
+        <div class="card" id="plumbingCard">
+            <h2 class="section-title">4. Вода и Канализация</h2>
+            <div class="form-group">
+                <label for="waterPoints">Точки водоразбора (вкл. стиральные машины, раковины)</label>
+                <input type="number" id="waterPoints" value="4" min="0">
+            </div>
+            <div class="form-group">
+                <label for="installations">Отдельно — Инсталляции (шт)</label>
+                <input type="number" id="installations" value="1" min="0">
+            </div>
+        </div>
+
+        <!-- Блок 5: Дополнительно -->
+        <div class="card">
+            <h2 class="section-title">5. Доп. работы</h2>
+            <div class="form-group">
+                <label for="holes">Количество отверстий для бурения/пробивки (шт)</label>
+                <input type="number" id="holes" value="0" min="0">
+            </div>
+            <label class="checkbox-group">
+                <input type="checkbox" id="outsideNetworks">
+                <span class="checkbox-text">Наружные сети / Скважина</span>
+            </label>
+        </div>
+
+        <!-- Submit -->
+        <button type="button" class="btn" id="calcBtn">Рассчитать стоимость</button>
+    </form>
+
+    <!-- Блок результатов -->
+    <div id="result-section" class="card mt-4">
+        <h2 class="section-title">Предварительная смета</h2>
+        
+        <div class="breakdown">
+            <div class="breakdown-item">
+                <span class="breakdown-label">Оборудование:</span>
+                <span class="breakdown-value" id="res-equipment">0 ₽</span>
+            </div>
+            <div class="breakdown-sublist" id="list-equipment"></div>
+
+            <div class="breakdown-item">
+                <span class="breakdown-label">Материалы:</span>
+                <span class="breakdown-value" id="res-materials">0 ₽</span>
+            </div>
+            <div class="breakdown-sublist" id="list-materials"></div>
+
+            <div class="breakdown-item">
+                <span class="breakdown-label">Монтажные работы:</span>
+                <span class="breakdown-value" id="res-work">0 ₽</span>
+            </div>
+            <div class="breakdown-sublist" id="list-work"></div>
+        </div>
+
+        <div class="total-price" id="res-total">
+            0 – 0 ₽
+        </div>
+
+        <div class="breakdown-item">
+            <span class="breakdown-label">Ориентировочный срок:</span>
+            <span class="breakdown-value" id="res-time">0 дней</span>
+        </div>
+
+        <div class="info-box">
+            Оценки включают запас 10% на трубы и фитинги по спецификации. Окончательная смета формируется только после детальных замеров на объекте.
+        </div>
+
+        <button type="button" class="btn btn-success" id="pdfBtn">Сохранить смету (PDF)</button>
+    </div>
+
+</div>
+
+<script>
+    // Логика UI: показ/скрытие полей
+    const checkHeating = document.getElementById('checkHeating');
+    const checkBoiler = document.getElementById('checkBoiler');
+    const checkPlumbing = document.getElementById('checkPlumbing');
+
+    const heatingCard = document.getElementById('heatingCard');
+    const boilerCard = document.getElementById('boilerCard');
+    const plumbingCard = document.getElementById('plumbingCard');
+
+    function updateScopeVisibilities() {
+        if (checkHeating.checked) heatingCard.classList.remove('hidden');
+        else heatingCard.classList.add('hidden');
+
+        if (checkBoiler.checked) boilerCard.classList.remove('hidden');
+        else boilerCard.classList.add('hidden');
+
+        if (checkPlumbing.checked) plumbingCard.classList.remove('hidden');
+        else plumbingCard.classList.add('hidden');
+    }
+
+    checkHeating.addEventListener('change', updateScopeVisibilities);
+    checkBoiler.addEventListener('change', updateScopeVisibilities);
+    checkPlumbing.addEventListener('change', updateScopeVisibilities);
+    updateScopeVisibilities(); // Вызываем при загрузке
+
+    const roomTypeCombo = document.getElementById('roomType');
+    const heightField = document.getElementById('heightField');
+    roomTypeCombo.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'hangar' || val === 'garage') {
+            heightField.classList.remove('hidden');
+        } else {
+            heightField.classList.add('hidden');
+        }
+    });
+
+    const heatingTypeCombo = document.getElementById('heatingType');
+    const windowsField = document.getElementById('windowsField');
+    const floorAreaField = document.getElementById('floorAreaField');
+    const volcanoField = document.getElementById('volcanoField');
+
+    heatingTypeCombo.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'radiators') {
+            windowsField.classList.remove('hidden');
+            floorAreaField.classList.add('hidden');
+            volcanoField.classList.add('hidden');
+        } else if (val === 'floor') {
+            windowsField.classList.add('hidden');
+            floorAreaField.classList.remove('hidden');
+            volcanoField.classList.add('hidden');
+        } else if (val === 'volcano') {
+            windowsField.classList.add('hidden');
+            floorAreaField.classList.add('hidden');
+            volcanoField.classList.remove('hidden');
+        } else {
+            windowsField.classList.remove('hidden');
+            floorAreaField.classList.remove('hidden');
+            volcanoField.classList.add('hidden');
+        }
+    });
+
+    // Извлечение значений (Helper)
+    const getNum = id => parseFloat(document.getElementById(id).value) || 0;
+    const getVal = id => document.getElementById(id).value;
+    const getCheck = id => document.getElementById(id).checked;
+
+    let targetTextForShare = "";
+
+    // Основная функция расчета
+    document.getElementById('calcBtn').addEventListener('click', () => {
+        const area = getNum('area');
+        const floors = getNum('floors');
+        const insulation = getVal('insulation');
+        const heatingType = getVal('heatingType');
+        const windows = getNum('windows');
+        const floorArea = getNum('floorArea');
+        const volcanos = getNum('volcanos');
+        const boilerType = getVal('boilerType');
+        const boilerContours = getNum('boilerContours');
+        const waterPoints = getNum('waterPoints');
+        const installations = getNum('installations');
+        const holes = getNum('holes');
+        const outsideNetworks = getCheck('outsideNetworks');
+        const roomType = getVal('roomType');
+        const ceilingHeight = getNum('ceilingHeight');
+
+        const isHeating = getCheck('checkHeating');
+        const isBoiler = getCheck('checkBoiler');
+        const isPlumbing = getCheck('checkPlumbing');
+
+        // Коэффициент утепления
+        let insCoef = 1.0;
+        if (insulation === 'good') insCoef = 0.9;
+        if (insulation === 'poor') insCoef = 1.2;
+
+        // Коэффициент высоты
+        let heightCoef = 1.0;
+        if ((roomType === 'hangar' || roomType === 'garage') && ceilingHeight > 3) {
+            heightCoef = 1.0 + (ceilingHeight - 3) * 0.1; // +10% за каждый метр выше 3м
+        }
+
+        // Инициализация сумм
+        let equipment = 0;
+        let materials = 0;
+        let work = 0;
+
+        let eqItems = [];
+        let matItems = [];
+        let workItems = [];
+
+        const fmt = num => new Intl.NumberFormat('ru-RU').format(Math.round(num));
+
+        const addEq = (n, p) => { if(p>0) { equipment += p; eqItems.push(`${n}: ${fmt(p)} ₽`); } };
+        const addMat = (n, p) => { if(p>0) { materials += p; matItems.push(`${n}: ${fmt(p)} ₽`); } };
+        const addWork = (n, p) => { if(p>0) { work += p; workItems.push(`${n}: ${fmt(p)} ₽`); } };
+
+        // 1. Отопление
+        if (isHeating) {
+            // Радиаторы
+            if (heatingType === 'radiators' || heatingType === 'combo') {
+                const reqPowerW = area * insCoef * 100;
+                const sections = Math.ceil(reqPowerW / 150);
+                addEq(`Радиаторы (прим. ${sections} секций)`, sections * 1000);
+                addWork(`Монтаж радиаторов (${windows} шт)`, windows * 5000 * heightCoef);
+                addMat(`Обвязка радиаторов`, windows * 2500 * heightCoef);
+            }
+
+            // Тёплый пол
+            if (heatingType === 'floor' || heatingType === 'combo') {
+                const fArea = (heatingType === 'floor') ? area : floorArea;
+                addWork(`Монтаж тёплого пола (${fArea} м²)`, fArea * 600);
+                addMat(`Труба 16мм и подложка (ТП)`, fArea * 1500 * 1.1); // 10% запас
+            }
+
+            // Воздушное (Вулканы)
+            if (heatingType === 'volcano') {
+                addEq(`Тепловентиляторы Volcano (${volcanos} шт)`, volcanos * 45000);
+                addWork(`Монтаж тепловентиляторов`, volcanos * 12000 * heightCoef); 
+                addMat(`Магистрали, автоматика Volcano`, volcanos * 5000 * heightCoef);
+            }
+            
+            // Смесительные модули (на каждый этаж)
+            if (heatingType === 'floor' || heatingType === 'combo') {
+                addEq(`Смесительные узлы (${floors} шт, по 1 на этаж)`, floors * 30000);
+                addWork(`Монтаж смесительных узлов`, floors * 15000);
+            }
+        }
+
+        // 2. Котельная
+        if (isBoiler) {
+            addWork('Базовый монтаж котельной', 40000);
+            if (boilerType === 'gas') {
+                const gasPrice = (boilerContours === 1) ? 60000 : 75000;
+                addEq(`Газовый котёл (${boilerContours} конт.)`, gasPrice);
+                
+                // Электро тоже нужен как резервный для газа
+                addEq(`Резервный электрокотёл`, 35000);
+                addMat(`Обвязка резервного котла`, 15000);
+                addWork(`Монтаж резервного электрокотла`, 15000);
+            } else {
+                const elecPrice = (boilerContours === 1) ? 35000 : 45000;
+                addEq(`Электрический котёл (${boilerContours} конт.)`, elecPrice);
+            }
+        }
+
+        // 3. Водоснабжение и Канализация
+        if (isPlumbing) {
+            addWork(`Монтаж точек водоразбора (${waterPoints} шт)`, waterPoints * 3000);
+            addMat(`Трубы и фитинги для водоснабжения`, waterPoints * 2000 * 1.1);
+            
+            if (installations > 0) {
+                // Монтаж 15k + 5k
+                addWork(`Монтаж инсталляций (${installations} шт)`, installations * 20000);
+                addMat(`Материалы обвязки инсталляций`, installations * 3000);
+            }
+        }
+
+        // 4. Доп работы
+        if (holes > 0) {
+            // Условная цена за 1 отверстие большого диаметра
+            addWork(`Бурение отверстий (${holes} шт)`, holes * 1500); 
+        }
+        if (outsideNetworks) {
+            addWork(`Обвязка скважины (монтаж)`, 25000);
+        }
+
+        // Итоговые коэффициенты
+        if (floors === 2) work *= 1.15;
+        if (floors === 3) work *= 1.30;
+
+        // Расчет вилки (от -10% до +15%)
+        const totalBase = Math.round(equipment + materials + work);
+        const minTotal = Math.round(totalBase * 0.9);
+        const maxTotal = Math.round(totalBase * 1.15);
+
+        // Строки
+        document.getElementById('res-equipment').innerText = `${fmt(equipment)} ₽`;
+        document.getElementById('list-equipment').innerHTML = eqItems.map(i => `<div>• ${i}</div>`).join('');
+        
+        document.getElementById('res-materials').innerText = `${fmt(materials)} ₽`;
+        document.getElementById('list-materials').innerHTML = matItems.map(i => `<div>• ${i}</div>`).join('');
+        
+        document.getElementById('res-work').innerText = `${fmt(work)} ₽`;
+        document.getElementById('list-work').innerHTML = workItems.map(i => `<div>• ${i}</div>`).join('');
+        document.getElementById('res-total').innerText = `${fmt(minTotal)} – ${fmt(maxTotal)} ₽`;
+
+        // Срок работ
+        let days = 2; // Базово хотя бы 2 дня
+        
+        if (roomType === 'hangar' || roomType === 'garage') {
+            // Для промышленных помещений
+            if (isHeating && heatingType === 'volcano') {
+                // Монтаж вулканов идет быстро (например, 2 дня на котельную + полдня на аппарат)
+                days = Math.ceil(2 + (volcanos * 0.5));
+            } else {
+                // Если радиаторы в ангаре, разводка наружная, считаем 50м2 в день
+                days = Math.ceil(area / 50);
+            }
+        } else {
+            // Коттедж (скрытая разводка, проход через стены, много помещений)
+            days = Math.ceil(area / 15);
+        }
+        
+        if (!isHeating && !isPlumbing && isBoiler) days = 3; // Только котельная
+        if (days < 2) days = 2; // Не меньше 2 дней на любой нормальный объект
+
+        document.getElementById('res-time').innerText = `~${days} рабочих дней`;
+
+        document.getElementById('result-section').style.display = 'block';
+
+        // Текст для шеринга
+        const listToText = (arr) => arr.length > 0 ? `\n   - ` + arr.join(`\n   - `) : '';
+
+        targetTextForShare = `Предварительный расчет инженерных сетей
+──────────────────────────────────
+Объект: ${document.querySelector('#roomType option:checked').text}
+Площадь: ${area} м², Этажей: ${floors}`;
+        
+        if (isHeating) {
+            targetTextForShare += `\nТип отопления: ${document.querySelector('#heatingType option:checked').text}`;
+        }
+        if (isBoiler) {
+            targetTextForShare += `\nОборудование котельной: ${document.querySelector('#boilerType option:checked').text} (${boilerContours} контура)`;
+            if (boilerType === 'gas') targetTextForShare += ` + Резервный Электрокотел`;
+        }
+
+        targetTextForShare += `\n\nПредварительная смета:`;
+        
+        targetTextForShare += `\n\n🛠 ОБОРУДОВАНИЕ: ~${fmt(equipment)} ₽`;
+        targetTextForShare += listToText(eqItems);
+
+        targetTextForShare += `\n\n🔧 МАТЕРИАЛЫ: ~${fmt(materials)} ₽`;
+        targetTextForShare += listToText(matItems);
+
+        targetTextForShare += `\n\n👷 МОНТАЖНЫЕ РАБОТЫ: ~${fmt(work)} ₽`;
+        targetTextForShare += listToText(workItems);
+        
+        targetTextForShare += `\n──────────────────────────────────
+ИТОГО (под ключ): ${fmt(minTotal)} – ${fmt(maxTotal)} ₽
+Примерный срок: ${days} рабочих дней
+
+* Оценки включают 10% запас на трубы и фитинги по спецификации.
+* Окончательная смета формируется только после детальных замеров на объекте.`;
+    });
+
+    // Генерация PDF через печать (работает офлайн, без CDN)
+    document.getElementById('pdfBtn').addEventListener('click', () => {
+        const area = getNum('area');
+        const floors = getNum('floors');
+        const roomLabel = document.querySelector('#roomType option:checked').text;
+        const insulLabel = document.querySelector('#insulation option:checked').text;
+        const totalText = document.getElementById('res-total').innerText;
+        const timeText = document.getElementById('res-time').innerText;
+        const eqTotal = document.getElementById('res-equipment').innerText;
+        const matTotal = document.getElementById('res-materials').innerText;
+        const workTotal = document.getElementById('res-work').innerText;
+
+        let paramsHtml = `
+            <tr><td><b>Тип объекта:</b> ${roomLabel}</td><td><b>Площадь:</b> ${area} м²</td></tr>
+            <tr><td><b>Этажей:</b> ${floors}</td><td><b>Утепление:</b> ${insulLabel}</td></tr>`;
+        if (getCheck('checkHeating')) {
+            paramsHtml += `<tr><td colspan="2"><b>Тип отопления:</b> ${document.querySelector('#heatingType option:checked').text}</td></tr>`;
+        }
+        if (getCheck('checkBoiler')) {
+            paramsHtml += `<tr><td colspan="2"><b>Котёл:</b> ${document.querySelector('#boilerType option:checked').text} (${getNum('boilerContours')} конт.)</td></tr>`;
+        }
+
+        function getListHtml(listId) {
+            let html = '';
+            document.getElementById(listId).querySelectorAll('div').forEach(item => {
+                html += '<div style="padding:2px 0;color:#555;font-size:12px">' + item.innerText + '</div>';
+            });
+            return html;
+        }
+
+        // Определяем путь к фото (рядом с HTML)
+        const photos = [
+            '54e11dc3-bf56-48ec-9eec-c2c01455548d.webp',
+            '6b223ef3-5553-4e87-b79e-05ba17ef25bd.webp',
+            'a1849596-6d77-48d0-ac3e-f4388d03a0db.webp',
+            'ab320f43-b91a-4734-ac3a-592bcaee2e8b.webp'
+        ];
+
+        let photosHtml = photos.map(p =>
+            `<img src="${p}" style="width:48%;border-radius:6px;border:1px solid #ccc;object-fit:cover;aspect-ratio:4/3">`
+        ).join('\n');
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Смета</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Arial, sans-serif; color: #1e293b; padding: 30px 40px; }
+    h1 { text-align:center; font-size:24px; margin-bottom:4px; }
+    .date { text-align:center; color:#94a3b8; font-size:13px; margin-bottom:25px; }
+    .section-title { color:#3b82f6; font-size:15px; font-weight:700; margin-bottom:4px; }
+    .divider { border-top:2px solid #3b82f6; padding-top:14px; margin-bottom:16px; }
+    .divider-light { border-top:1px solid #ddd; padding-top:12px; margin-bottom:16px; }
+    .row { display:flex; justify-content:space-between; margin-bottom:4px; }
+    .row-total { font-weight:700; font-size:15px; }
+    .total-block { border-top:3px solid #3b82f6; padding:18px 0; text-align:center; margin-top:8px; }
+    .total-price { font-size:22px; font-weight:700; color:#3b82f6; margin-bottom:4px; }
+    .total-time { font-size:13px; color:#475569; }
+    .note { background:#eff6ff; border-radius:6px; padding:10px 14px; margin-top:16px; font-size:11px; color:#1e40af; }
+    table.params { width:100%; margin-bottom:8px; }
+    table.params td { padding:3px 0; font-size:13px; }
+    .page-break { page-break-before:always; }
+    .photos-title { text-align:center; font-size:20px; margin-bottom:20px; margin-top:10px; }
+    .photos-grid { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+    .photos-grid img { width:48%; border-radius:6px; border:1px solid #ccc; }
+    @media print {
+        body { padding: 20px 30px; }
+        .no-print { display:none; }
+    }
+</style>
+</head>
+<body>
+
+<h1>Предварительная смета</h1>
+<div class="date">${new Date().toLocaleDateString('ru-RU')}</div>
+
+<div class="divider">
+    <div class="section-title">Параметры объекта</div>
+    <table class="params">${paramsHtml}</table>
+</div>
+
+<div class="divider">
+    <div class="row">
+        <span class="section-title">Оборудование</span>
+        <span class="row-total">${eqTotal}</span>
+    </div>
+    ${getListHtml('list-equipment')}
+</div>
+
+<div class="divider-light">
+    <div class="row">
+        <span class="section-title">Материалы</span>
+        <span class="row-total">${matTotal}</span>
+    </div>
+    ${getListHtml('list-materials')}
+</div>
+
+<div class="divider-light">
+    <div class="row">
+        <span class="section-title">Монтажные работы</span>
+        <span class="row-total">${workTotal}</span>
+    </div>
+    ${getListHtml('list-work')}
+</div>
+
+<div class="total-block">
+    <div class="total-price">ИТОГО: ${totalText}</div>
+    <div class="total-time">Ориентировочный срок: ${timeText}</div>
+</div>
+
+<div class="note">
+    Оценки включают запас 10% на трубы и фитинги по спецификации.<br>
+    Окончательная смета формируется только после детальных замеров на объекте.
+</div>
+
+<div class="page-break"></div>
+<h2 class="photos-title">Примеры выполненных работ</h2>
+<div class="photos-grid">
+    ${photosHtml}
+</div>
+
+<script>
+    // Ждём загрузки фото, потом печатаем
+    const imgs = document.querySelectorAll('.photos-grid img');
+    let loaded = 0;
+    function checkAllLoaded() {
+        loaded++;
+        if (loaded >= imgs.length) {
+            setTimeout(() => window.print(), 300);
+        }
+    }
+    imgs.forEach(img => {
+        if (img.complete) checkAllLoaded();
+        else {
+            img.onload = checkAllLoaded;
+            img.onerror = checkAllLoaded;
+        }
+    });
+    if (imgs.length === 0) setTimeout(() => window.print(), 300);
+<\/script>
+
+</body>
+</html>`);
+        printWindow.document.close();
+    });
+</script>
+</body>
+</html>
