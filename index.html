@@ -6,7 +6,7 @@
     <title>Калькулятор</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
             --primary: #3b82f6;
@@ -433,7 +433,6 @@
         </div>
 
         <div style="display:flex; gap:10px; margin-top:15px; flex-direction:column;">
-            <button type="button" class="btn btn-success" id="shareBtn" style="background:#10b981; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);">📋 Скопировать текст в WhatsApp</button>
             <button type="button" class="btn btn-primary" id="pdfBtn" style="background:#3b82f6; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);">📄 Отправить как PDF</button>
         </div>
     </div>
@@ -704,24 +703,7 @@
 Примерный срок: ${days} рабочих дней
 
 * Оценки включают 10% запас на трубы и фитинги по спецификации.
-* Окончательная смета формируется только после детальных замеров на объекте.`;
-    });
-
-    // Обработчик копирования текста (восстановлен)
-    document.getElementById('shareBtn').addEventListener('click', async () => {
-        const btn = document.getElementById('shareBtn');
-        try {
-            await navigator.clipboard.writeText(targetTextForShare);
-            const origText = btn.innerText;
-            btn.innerText = 'Скопировано ✔ (вставь в чат)';
-            btn.style.background = '#059669';
-            setTimeout(() => {
-                btn.innerText = origText;
-                btn.style.background = '#10b981';
-            }, 3000);
-        } catch (err) {
-            alert('Не удалось скопировать текст. Выделите его вручную.');
-        }
+        * Окончательная смета формируется только после детальных замеров на объекте.`;
     });
 
     // Фото для портфолио
