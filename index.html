@@ -711,7 +711,9 @@
         '54e11dc3-bf56-48ec-9eec-c2c01455548d.webp',
         '6b223ef3-5553-4e87-b79e-05ba17ef25bd.webp',
         'a1849596-6d77-48d0-ac3e-f4388d03a0db.webp',
-        'ab320f43-b91a-4734-ac3a-592bcaee2e8b.webp'
+        'dcae07c6-dd2a-4093-beee-247aca2f7bdf.webp',
+        'ba54d202-1519-4ac1-8fe3-70dbf4b72482.webp',
+        '618c106b-4a6c-4605-9395-7988b1808ddf.webp'
     ];
 
     function loadImageAsDataUrl(src) {
@@ -724,7 +726,7 @@
                 c.width = img.naturalWidth * scale;
                 c.height = img.naturalHeight * scale;
                 c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-                resolve(c.toDataURL('image/jpeg', 0.75));
+                resolve({ dataUrl: c.toDataURL('image/jpeg', 0.8), w: c.width, h: c.height });
             };
             img.onerror = () => resolve(null);
             img.src = src;
@@ -853,16 +855,35 @@
 
                 const margin = 15;
                 const gap = 5;
-                const imgW = (pW - margin * 2 - gap) / 2;
-                const imgHt = imgW * 0.72;
-                let startY = 24;
+                const cellW = (pW - margin * 2 - gap) / 2;
+                const cellH = (pH - 40 - margin - gap * 2) / 3; // 3 ряда фото
+                let startY = 25;
 
-                photos.forEach((dataUrl, i) => {
+                photos.forEach((photo, i) => {
+                    if (i >= 6) return; // Макс 6 фото на страницу
                     const col = i % 2;
                     const row = Math.floor(i / 2);
-                    const x = margin + col * (imgW + gap);
-                    const y = startY + row * (imgHt + gap);
-                    doc.addImage(dataUrl, 'JPEG', x, y, imgW, imgHt);
+                    
+                    const cellX = margin + col * (cellW + gap);
+                    const cellY = startY + row * (cellH + gap);
+
+                    // Умный расчет пропорций, чтобы картинка обрезалась или вмещалась эстетично
+                    const imgRatio = photo.w / photo.h;
+                    const cellRatio = cellW / cellH;
+                    let drawW = cellW;
+                    let drawH = cellH;
+                    let offsetX = 0;
+                    let offsetY = 0;
+
+                    if (imgRatio > cellRatio) {
+                        drawH = cellW / imgRatio;
+                        offsetY = (cellH - drawH) / 2;
+                    } else {
+                        drawW = cellH * imgRatio;
+                        offsetX = (cellW - drawW) / 2;
+                    }
+
+                    doc.addImage(photo.dataUrl, 'JPEG', cellX + offsetX, cellY + offsetY, drawW, drawH);
                 });
             }
 
