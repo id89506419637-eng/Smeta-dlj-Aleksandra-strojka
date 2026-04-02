@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Калькулятор</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -23,7 +23,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Manrope', sans-serif;
         }
 
         body {
@@ -76,7 +76,7 @@
             margin-bottom: 15px;
             display: flex;
             align-items: center;
-            color: var(--primary);
+            color: #1a3a5c;
         }
 
         .form-group {
@@ -185,7 +185,7 @@
         .total-price {
             font-size: 1.6rem;
             font-weight: 700;
-            color: var(--primary);
+            color: #1a1a1a;
             text-align: center;
             margin: 15px 0;
             padding: 15px 0;
@@ -261,6 +261,19 @@
         <h1>Калькулятор</h1>
         <p class="subtitle">Предварительный расчёт для клиента</p>
     </header>
+
+    <!-- Блок: Данные клиента -->
+    <div class="card">
+        <h2 class="section-title">Данные клиента</h2>
+        <div class="form-group">
+            <label for="clientName">Имя клиента</label>
+            <input type="text" id="clientName" placeholder="Иванов Иван Иванович" style="width:100%;padding:12px 14px;border:1px solid #cbd5e1;border-radius:10px;font-size:1rem;background:#fff;color:var(--text-main);outline:none;">
+        </div>
+        <div class="form-group">
+            <label for="clientAddress">Адрес объекта</label>
+            <input type="text" id="clientAddress" placeholder="г. Москва, ул. Примерная, д. 1" style="width:100%;padding:12px 14px;border:1px solid #cbd5e1;border-radius:10px;font-size:1rem;background:#fff;color:var(--text-main);outline:none;">
+        </div>
+    </div>
 
     <form id="calc-form">
         <!-- Блок 0: Что считаем -->
@@ -430,6 +443,13 @@
 
         <div class="info-box">
             Оценки включают запас 10% на трубы и фитинги по спецификации. Окончательная смета формируется только после детальных замеров на объекте.
+        </div>
+
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-top:15px;text-align:center;" id="validity-date">
+        </div>
+
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-top:10px;text-align:right;">
+            Александр +7 950 654-43-37
         </div>
 
         <div style="display:flex; gap:10px; margin-top:15px; flex-direction:column;">
@@ -671,6 +691,10 @@
 
         document.getElementById('result-section').style.display = 'block';
 
+        // Дата действия сметы — +1 месяц от сегодня
+        const validUntil = new Date(Date.now() + 30*24*60*60*1000);
+        document.getElementById('validity-date').innerText = 'Смета действительна до ' + validUntil.toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+
         // Текст для шеринга
         const listToText = (arr) => arr.length > 0 ? `\n   - ` + arr.join(`\n   - `) : '';
 
@@ -751,13 +775,16 @@
             const matTotal = document.getElementById('res-materials').innerText;
             const workTotal = document.getElementById('res-work').innerText;
 
-            let paramsRows = `<b>Тип объекта:</b> ${roomLabel} &nbsp; | &nbsp; <b>Площадь:</b> ${area} м²<br>
-                <b>Этажей:</b> ${floors} &nbsp; | &nbsp; <b>Утепление:</b> ${insulLabel}`;
+            const chipStyle = 'display:inline-block;background:#e8edf3;border-radius:6px;padding:5px 12px;font-size:12px;color:#1e293b;';
+            let paramsRows = `<span style="${chipStyle}">Тип: ${roomLabel}</span>
+                <span style="${chipStyle}">Площадь: ${area} м²</span>
+                <span style="${chipStyle}">Этажей: ${floors}</span>
+                <span style="${chipStyle}">Утепление: ${insulLabel}</span>`;
             if (getCheck('checkHeating')) {
-                paramsRows += `<br><b>Тип отопления:</b> ${document.querySelector('#heatingType option:checked').text}`;
+                paramsRows += `<span style="${chipStyle}">Отопление: ${document.querySelector('#heatingType option:checked').text}</span>`;
             }
             if (getCheck('checkBoiler')) {
-                paramsRows += `<br><b>Котёл:</b> ${document.querySelector('#boilerType option:checked').text} (${getNum('boilerContours')} конт.)`;
+                paramsRows += `<span style="${chipStyle}">Котёл: ${document.querySelector('#boilerType option:checked').text} (${getNum('boilerContours')} конт.)</span>`;
             }
 
             function grabList(listId) {
@@ -771,28 +798,40 @@
             // HTML-шаблон сметы (только текст, без фото)
             const smetaDiv = document.createElement('div');
             smetaDiv.style.cssText = 'position:absolute;left:0;top:0;z-index:-1;opacity:0;pointer-events:none';
+            const clientName = document.getElementById('clientName').value.trim();
+            const clientAddress = document.getElementById('clientAddress').value.trim();
+
+            let clientBlock = '';
+            if (clientName || clientAddress) {
+                clientBlock = `<div style="margin-bottom:18px;font-size:13px;line-height:1.6;">`;
+                if (clientName) clientBlock += `<div><b>Клиент:</b> ${clientName}</div>`;
+                if (clientAddress) clientBlock += `<div><b>Адрес объекта:</b> ${clientAddress}</div>`;
+                clientBlock += `</div>`;
+            }
+
             smetaDiv.innerHTML = `
-            <div style="font-family:Arial,sans-serif;width:794px;padding:45px 50px;background:#fff;color:#1e293b">
-                <h1 style="text-align:center;font-size:24px;margin:0 0 4px">Предварительная смета</h1>
+            <div style="font-family:Manrope,Arial,sans-serif;width:794px;padding:45px 50px;background:#fff;color:#1e293b">
+                <h1 style="text-align:center;font-size:24px;margin:0 0 4px;font-weight:700;">Предварительная смета</h1>
                 <p style="text-align:center;color:#999;font-size:12px;margin:0 0 22px">${new Date().toLocaleDateString('ru-RU')}</p>
-                <div style="border-top:2px solid #3b82f6;padding-top:14px;margin-bottom:18px">
-                    <div style="color:#3b82f6;font-weight:700;font-size:14px;margin-bottom:8px">Параметры объекта</div>
-                    <div style="font-size:12px;line-height:1.6">${paramsRows}</div>
+                ${clientBlock}
+                <div style="border-top:2px solid #1a3a5c;padding-top:14px;margin-bottom:18px">
+                    <div style="color:#1a3a5c;font-weight:700;font-size:14px;margin-bottom:10px">Параметры объекта</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;">${paramsRows}</div>
                 </div>
-                <div style="border-top:2px solid #3b82f6;padding-top:12px;margin-bottom:12px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#3b82f6;font-weight:700;font-size:13px">Оборудование</span><span style="font-weight:700;font-size:13px">${eqTotal}</span></div>
+                <div style="border-top:2px solid #1a3a5c;padding-top:12px;margin-bottom:12px">
+                    <div style="display:flex;justify-content:space-between"><span style="color:#1a3a5c;font-weight:700;font-size:13px">Оборудование</span><span style="font-weight:700;font-size:13px">${eqTotal}</span></div>
                     ${grabList('list-equipment')}
                 </div>
                 <div style="border-top:1px solid #ddd;padding-top:10px;margin-bottom:12px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#3b82f6;font-weight:700;font-size:13px">Материалы</span><span style="font-weight:700;font-size:13px">${matTotal}</span></div>
+                    <div style="display:flex;justify-content:space-between"><span style="color:#1a3a5c;font-weight:700;font-size:13px">Материалы</span><span style="font-weight:700;font-size:13px">${matTotal}</span></div>
                     ${grabList('list-materials')}
                 </div>
                 <div style="border-top:1px solid #ddd;padding-top:10px;margin-bottom:18px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#3b82f6;font-weight:700;font-size:13px">Монтажные работы</span><span style="font-weight:700;font-size:13px">${workTotal}</span></div>
+                    <div style="display:flex;justify-content:space-between"><span style="color:#1a3a5c;font-weight:700;font-size:13px">Монтажные работы</span><span style="font-weight:700;font-size:13px">${workTotal}</span></div>
                     ${grabList('list-work')}
                 </div>
-                <div style="border-top:3px solid #3b82f6;padding:16px 0;text-align:center">
-                    <div style="font-size:22px;font-weight:700;color:#3b82f6;margin-bottom:4px">ИТОГО: ${totalText}</div>
+                <div style="border-top:3px solid #1a3a5c;padding:16px 0;text-align:center">
+                    <div style="font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:4px">ИТОГО: ${totalText}</div>
                     <div style="font-size:13px;color:#475569">Ориентировочный срок: ${timeText}</div>
                 </div>
                 <div style="background:#eff6ff;border-radius:6px;padding:12px 16px;margin-top:16px;font-size:13px;color:#1e40af;line-height:1.5;">
@@ -800,12 +839,19 @@
                     Стоимость в данном КП является ориентировочной и рассчитана на основании предоставленных данных. Итоговая стоимость определяется после уточнения технических деталей и осмотра объекта.
                 </div>
                 <div style="border-top:1px solid #ddd;padding-top:16px;margin-top:20px;">
+                    <div style="color:#1a3a5c;font-weight:700;font-size:14px;margin-bottom:8px;">Условия работы</div>
                     <ul style="font-size:13px;color:#475569;line-height:1.6;margin:0;padding-left:15px;">
-                        <li style="margin-bottom:6px;"><b>Проверенные материалы:</b> Работаем с надежными системами: Rehau, TECE, Stout, Valtec.</li>
-                        <li style="margin-bottom:6px;"><b>Профессиональный монтаж:</b> Используем специализированный инструмент и соблюдаем технологии монтажа.</li>
-                        <li style="margin-bottom:6px;"><b>Гарантия 3 года:</b> Предоставляем гарантию на все соединения и систему «под ключ».</li>
-                        <li><b>Фото- и видеофиксация скрытых работ:</b> Перед закрытием коммуникаций предоставляем полный фото- и видеоотчет выполненных работ.</li>
+                        <li style="margin-bottom:6px;">Используемые материалы: Rehau, TECE, Stout, Valtec.</li>
+                        <li style="margin-bottom:6px;">Монтаж выполняется специализированным инструментом с соблюдением технологий.</li>
+                        <li style="margin-bottom:6px;">Гарантия 3 года на все соединения и систему «под ключ».</li>
+                        <li>Фото- и видеофиксация скрытых работ перед закрытием коммуникаций.</li>
                     </ul>
+                </div>
+                <div style="margin-top:20px;padding-top:12px;border-top:1px solid #ddd;font-size:12px;color:#475569;text-align:center;">
+                    Смета действительна до ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'})}
+                </div>
+                <div style="margin-top:8px;font-size:12px;color:#475569;text-align:right;">
+                    Александр +7 950 654-43-37
                 </div>
             </div>`;
             document.body.appendChild(smetaDiv);
