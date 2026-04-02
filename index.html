@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Калькулятор</title>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=PT+Sans+Narrow:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
     <style>
         :root {
             --primary: #3b82f6;
@@ -35,7 +35,6 @@
             justify-content: center;
             font-family: 'Manrope', sans-serif;
             letter-spacing: 0;
-            font-stretch: normal;
         }
 
         .container {
@@ -772,7 +771,7 @@
         });
     }
 
-    // Генерация PDF (jsPDF + html2canvas)
+    // Генерация PDF (pdfmake — настоящий текст, Roboto с кириллицей)
     document.getElementById('pdfBtn').addEventListener('click', async () => {
         const btn = document.getElementById('pdfBtn');
         const origText = btn.innerText;
@@ -790,113 +789,173 @@
             const matTotal = document.getElementById('res-materials').innerText;
             const workTotal = document.getElementById('res-work').innerText;
 
-            const chipStyle = 'display:inline-block;background:#f0f4f8;color:#001f5c;border-radius:20px;padding:6px 14px;font-size:14px;font-weight:600;';
-            let paramsRows = `<span style="${chipStyle}">Тип: ${roomLabel}</span>
-                <span style="${chipStyle}">Площадь: ${area} м²</span>
-                <span style="${chipStyle}">Этажей: ${floors}</span>
-                <span style="${chipStyle}">Утепление: ${insulLabel}</span>`;
+            // Параметры объекта
+            const paramsText = [`Тип: ${roomLabel}`, `Площадь: ${area} м²`, `Этажей: ${floors}`, `Утепление: ${insulLabel}`];
             if (getCheck('checkHeating')) {
-                paramsRows += `<span style="${chipStyle}">Отопление: ${document.querySelector('#heatingType option:checked').text}</span>`;
+                paramsText.push(`Отопление: ${document.querySelector('#heatingType option:checked').text}`);
             }
             if (getCheck('checkBoiler')) {
-                paramsRows += `<span style="${chipStyle}">Котёл: ${document.querySelector('#boilerType option:checked').text} (${getNum('boilerContours')} конт.)</span>`;
+                paramsText.push(`Котёл: ${document.querySelector('#boilerType option:checked').text} (${getNum('boilerContours')} конт.)`);
             }
 
-            function grabList(listId) {
-                let h = '';
+            // Собираем позиции из списков
+            function grabItems(listId) {
+                const items = [];
                 document.getElementById(listId).querySelectorAll('div').forEach(el => {
-                    h += `<div style="padding:9px 0 9px 8px;color:#333;font-size:15px;font-weight:400;border-bottom:1px solid #eee;letter-spacing:0;">${el.innerText}</div>`;
+                    const t = el.innerText.trim();
+                    if (t) items.push(t);
                 });
-                return h;
+                return items;
             }
+            const eqItems = grabItems('list-equipment');
+            const matItems = grabItems('list-materials');
+            const workItems = grabItems('list-work');
 
-            // HTML-шаблон сметы (только текст, без фото)
-            const smetaDiv = document.createElement('div');
-            smetaDiv.style.cssText = 'position:fixed;left:-9999px;top:0;pointer-events:none;';
+            // Клиент
             const clientName = document.getElementById('clientName').value.trim();
             const clientAddress = document.getElementById('clientAddress').value.trim();
 
-            let clientBlock = '';
-            if (clientName || clientAddress) {
-                clientBlock = `<div style="margin-bottom:18px;font-size:13px;line-height:1.6;">`;
-                if (clientName) clientBlock += `<div><b>Клиент:</b> ${clientName}</div>`;
-                if (clientAddress) clientBlock += `<div><b>Адрес объекта:</b> ${clientAddress}</div>`;
-                clientBlock += `</div>`;
+            // Даты
+            const today = new Date().toLocaleDateString('ru-RU');
+            const validUntil = new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'});
+
+            // Цвета
+            const navy = '#001f5c';
+            const grey = '#475569';
+
+            // Формируем строки таблицы для секции (название : цена)
+            function sectionRows(items) {
+                return items.map(item => {
+                    const lastColon = item.lastIndexOf(':');
+                    if (lastColon > 0) {
+                        return [
+                            { text: item.substring(0, lastColon).trim(), fontSize: 10, color: '#333', margin: [8, 3, 0, 3] },
+                            { text: item.substring(lastColon + 1).trim(), fontSize: 10, color: '#333', alignment: 'right', margin: [0, 3, 0, 3] }
+                        ];
+                    }
+                    return [
+                        { text: item, fontSize: 10, color: '#333', colSpan: 2, margin: [8, 3, 0, 3] }, {}
+                    ];
+                });
             }
 
-            smetaDiv.innerHTML = `
-            <div style="font-family:'PT Sans Narrow', sans-serif;letter-spacing:0;width:794px;padding:45px 50px;background:#fff;color:#1e293b">
-                <h1 style="text-align:center;font-size:24px;margin:0 0 4px;font-weight:700;">Предварительная смета</h1>
-                <p style="text-align:center;color:#999;font-size:13px;margin:0 0 22px">${new Date().toLocaleDateString('ru-RU')}</p>
-                ${clientBlock}
-                <div style="border-top:2px solid #001f5c;padding-top:14px;margin-bottom:18px">
-                    <div style="color:#001f5c;font-weight:700;font-size:15px;margin-bottom:10px;letter-spacing:0;">Параметры объекта</div>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:14px;">${paramsRows}</div>
-                </div>
-                <div style="border-top:2px solid #001f5c;padding-top:12px;margin-bottom:12px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#001f5c;font-weight:700;font-size:15px;letter-spacing:0;">Оборудование</span><span style="font-weight:700;font-size:15px;color:#1a1a1a;letter-spacing:0;">${eqTotal}</span></div>
-                    ${grabList('list-equipment')}
-                </div>
-                <div style="border-top:1px solid #ddd;padding-top:10px;margin-bottom:12px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#001f5c;font-weight:700;font-size:15px;letter-spacing:0;">Материалы</span><span style="font-weight:700;font-size:15px;color:#1a1a1a;letter-spacing:0;">${matTotal}</span></div>
-                    ${grabList('list-materials')}
-                </div>
-                <div style="border-top:1px solid #ddd;padding-top:10px;margin-bottom:18px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#001f5c;font-weight:700;font-size:15px;letter-spacing:0;">Монтажные работы</span><span style="font-weight:700;font-size:15px;color:#1a1a1a;letter-spacing:0;">${workTotal}</span></div>
-                    ${grabList('list-work')}
-                </div>
-                <div style="border-top:3px solid #001f5c;padding:16px 0;text-align:center">
-                    <div style="font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:4px">ИТОГО: ${totalText}</div>
-                    <div style="font-size:13px;color:#475569">Ориентировочный срок: ${timeText}</div>
-                </div>
-                <div style="background:#f7f7f4;border-radius:6px;padding:12px 16px;margin-top:16px;font-size:13px;color:#6b4900;line-height:1.5;border-left:3px solid #e8a020;">
-                    <strong style="font-size:14px;display:block;margin-bottom:4px;">Предварительный расчет стоимости</strong>
-                    Стоимость в данном КП является ориентировочной и рассчитана на основании предоставленных данных. Итоговая стоимость определяется после уточнения технических деталей и осмотра объекта.
-                </div>
-                <div style="border-top:1px solid #ddd;padding-top:16px;margin-top:20px;">
-                    <div style="color:#001f5c;font-weight:700;font-size:15px;margin-bottom:8px;">Условия работы</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:15px;color:#475569;line-height:1.6;">
-                        <div>• Используемые материалы: Rehau, TECE, Stout, Valtec.</div>
-                        <div>• Монтаж выполняется специализированным инструментом с соблюдением технологий.</div>
-                        <div>• Гарантия 3 года на все соединения и систему «под ключ».</div>
-                        <div>• Фото- и видеофиксация скрытых работ перед закрытием коммуникаций.</div>
-                    </div>
-                </div>
-                <div style="margin-top:20px;padding-top:12px;border-top:1px solid #ddd;font-size:12px;color:#475569;text-align:center;">
-                    Смета действительна до ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'})}
-                </div>
-                <div style="margin-top:8px;font-size:12px;color:#475569;text-align:right;">
-                    Александр +7 950 654-43-37
-                </div>
-            </div>`;
-            document.body.appendChild(smetaDiv);
+            // Секция: заголовок + сумма + позиции
+            function makeSection(title, total, items, topBorder) {
+                const block = [];
+                // Заголовок секции
+                block.push({
+                    margin: [0, 6, 0, 0],
+                    table: {
+                        widths: ['*', 'auto'],
+                        body: [[
+                            { text: title, bold: true, fontSize: 12, color: navy },
+                            { text: total, bold: true, fontSize: 12, alignment: 'right' }
+                        ]]
+                    },
+                    layout: {
+                        hLineWidth: (i) => i === 0 ? (topBorder ? 1.5 : 0.5) : 0,
+                        vLineWidth: () => 0,
+                        hLineColor: () => topBorder ? navy : '#dddddd',
+                        paddingTop: () => 6, paddingBottom: () => 4,
+                        paddingLeft: () => 0, paddingRight: () => 0
+                    }
+                });
+                // Позиции
+                if (items.length > 0) {
+                    block.push({
+                        margin: [0, 0, 0, 2],
+                        table: {
+                            widths: ['*', 'auto'],
+                            body: sectionRows(items)
+                        },
+                        layout: {
+                            hLineWidth: (i, node) => i > 0 && i < node.table.body.length ? 0.3 : 0,
+                            vLineWidth: () => 0,
+                            hLineColor: () => '#eeeeee',
+                            paddingTop: () => 2, paddingBottom: () => 2,
+                            paddingLeft: () => 0, paddingRight: () => 0
+                        }
+                    });
+                }
+                return block;
+            }
 
-            // Принудительно загружаем PT Sans Narrow перед рендерингом
-            await Promise.all([
-                document.fonts.load('400 16px "PT Sans Narrow"'),
-                document.fonts.load('700 16px "PT Sans Narrow"')
-            ]);
-            await document.fonts.ready;
-            await new Promise(r => setTimeout(r, 300));
+            // ---- Собираем документ ----
+            const content = [];
 
-            const canvas = await html2canvas(smetaDiv.firstElementChild, {
-                scale: 2,
-                backgroundColor: '#ffffff',
-                logging: false
+            // Заголовок
+            content.push({ text: 'Предварительная смета', fontSize: 20, bold: true, alignment: 'center', margin: [0, 0, 0, 2] });
+            content.push({ text: today, fontSize: 10, color: '#999999', alignment: 'center', margin: [0, 0, 0, 16] });
+
+            // Клиент
+            if (clientName || clientAddress) {
+                if (clientName) content.push({ text: [{ text: 'Клиент: ', bold: true }, clientName], fontSize: 10, margin: [0, 0, 0, 2] });
+                if (clientAddress) content.push({ text: [{ text: 'Адрес объекта: ', bold: true }, clientAddress], fontSize: 10, margin: [0, 0, 0, 2] });
+                content.push({ text: '', margin: [0, 0, 0, 10] });
+            }
+
+            // Параметры объекта
+            content.push({
+                canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: navy }],
+                margin: [0, 0, 0, 6]
             });
-            document.body.removeChild(smetaDiv);
+            content.push({ text: 'Параметры объекта', bold: true, fontSize: 12, color: navy, margin: [0, 0, 0, 6] });
+            content.push({ text: paramsText.join('   |   '), fontSize: 10, color: navy, margin: [0, 0, 0, 12] });
 
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'mm', 'a4');
+            // Секции
+            content.push(...makeSection('Оборудование', eqTotal, eqItems, true));
+            content.push(...makeSection('Материалы', matTotal, matItems, false));
+            content.push(...makeSection('Монтажные работы', workTotal, workItems, false));
 
-            // Страница 1: смета
-            const imgData = canvas.toDataURL('image/jpeg', 0.92);
-            const pW = 210;
-            const pH = 297;
-            const imgH = (canvas.height * pW) / canvas.width;
-            doc.addImage(imgData, 'JPEG', 0, 0, pW, Math.min(imgH, pH));
+            // ИТОГО
+            content.push({
+                canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 2, lineColor: navy }],
+                margin: [0, 10, 0, 8]
+            });
+            content.push({ text: 'ИТОГО: ' + totalText, fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 4] });
+            content.push({ text: 'Ориентировочный срок: ' + timeText, fontSize: 10, color: grey, alignment: 'center', margin: [0, 0, 0, 14] });
 
-            // Страница 2: фото работ
+            // Предупреждение
+            content.push({
+                table: {
+                    widths: ['*'],
+                    body: [[{
+                        stack: [
+                            { text: 'Предварительный расчет стоимости', bold: true, fontSize: 11, margin: [0, 0, 0, 3] },
+                            { text: 'Стоимость в данном КП является ориентировочной и рассчитана на основании предоставленных данных. Итоговая стоимость определяется после уточнения технических деталей и осмотра объекта.', fontSize: 9 }
+                        ],
+                        fillColor: '#f7f7f4',
+                        color: '#6b4900',
+                        margin: [10, 8, 10, 8]
+                    }]]
+                },
+                layout: {
+                    hLineWidth: () => 0,
+                    vLineWidth: (i) => i === 0 ? 3 : 0,
+                    vLineColor: () => '#e8a020'
+                },
+                margin: [0, 0, 0, 14]
+            });
+
+            // Условия работы
+            content.push({ text: 'Условия работы', bold: true, fontSize: 12, color: navy, margin: [0, 0, 0, 6] });
+            content.push({
+                ul: [
+                    'Используемые материалы: Rehau, TECE, Stout, Valtec.',
+                    'Монтаж выполняется специализированным инструментом с соблюдением технологий.',
+                    'Гарантия 3 года на все соединения и систему «под ключ».',
+                    'Фото- и видеофиксация скрытых работ перед закрытием коммуникаций.'
+                ],
+                fontSize: 10, color: grey, lineHeight: 1.5,
+                margin: [0, 0, 0, 16]
+            });
+
+            // Срок действия + контакт
+            content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#dddddd' }], margin: [0, 0, 0, 8] });
+            content.push({ text: 'Смета действительна до ' + validUntil, fontSize: 9, color: grey, alignment: 'center', margin: [0, 0, 0, 4] });
+            content.push({ text: 'Александр +7 950 654-43-37', fontSize: 9, color: grey, alignment: 'right' });
+
+            // ---- Страница 2: фото работ ----
             const photos = [];
             for (const src of portfolioPhotos) {
                 const dataUrl = await loadImageAsDataUrl(src);
@@ -904,83 +963,50 @@
             }
 
             if (photos.length > 0) {
-                doc.addPage();
+                content.push({ text: 'Примеры выполненных работ', fontSize: 18, bold: true, alignment: 'center', pageBreak: 'before', margin: [0, 0, 0, 14] });
 
-                // Заголовок через canvas (кириллица)
-                const tc = document.createElement('canvas');
-                tc.width = 800; tc.height = 50;
-                const tctx = tc.getContext('2d');
-                tctx.fillStyle = '#fff';
-                tctx.fillRect(0, 0, 800, 50);
-                tctx.font = 'bold 26px Arial';
-                tctx.fillStyle = '#1e293b';
-                tctx.textAlign = 'center';
-                tctx.fillText('Примеры выполненных работ', 400, 35);
-                doc.addImage(tc.toDataURL('image/png'), 'PNG', 0, 5, pW, 12);
-
-                const margin = 15;
-                const gap = 5;
-                const cellW = (pW - margin * 2 - gap) / 2;
-                const cellH = (pH - 40 - margin - gap * 2) / 3; // 3 ряда фото
-                let startY = 25;
-
-                photos.forEach((photo, i) => {
-                    if (i >= 6) return; // Макс 6 фото на страницу
-                    const col = i % 2;
-                    const row = Math.floor(i / 2);
-                    
-                    const cellX = margin + col * (cellW + gap);
-                    const cellY = startY + row * (cellH + gap);
-
-                    // Умный расчет пропорций, чтобы картинка обрезалась или вмещалась эстетично
-                    const imgRatio = photo.w / photo.h;
-                    const cellRatio = cellW / cellH;
-                    let drawW = cellW;
-                    let drawH = cellH;
-                    let offsetX = 0;
-                    let offsetY = 0;
-
-                    if (imgRatio > cellRatio) {
-                        drawH = cellW / imgRatio;
-                        offsetY = (cellH - drawH) / 2;
-                    } else {
-                        drawW = cellH * imgRatio;
-                        offsetX = (cellW - drawW) / 2;
+                for (let i = 0; i < photos.length && i < 6; i += 2) {
+                    const cols = [{ image: photos[i].dataUrl, width: 245 }];
+                    if (photos[i + 1]) {
+                        cols.push({ image: photos[i + 1].dataUrl, width: 245 });
                     }
-
-                    doc.addImage(photo.dataUrl, 'JPEG', cellX + offsetX, cellY + offsetY, drawW, drawH);
-                });
+                    content.push({ columns: cols, columnGap: 10, margin: [0, 0, 0, 10] });
+                }
             }
 
-            // Пытаемся запустить нативное iOS/Android окно отправки файла (Whatsapp/Telegram)
-            try {
-                const pdfBlob = doc.output('blob');
-                const file = new File([pdfBlob], 'Smeta_Otoplenie.pdf', { type: 'application/pdf' });
-                
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
+            // Определение документа
+            const docDefinition = {
+                pageSize: 'A4',
+                pageMargins: [40, 40, 40, 30],
+                defaultStyle: { font: 'Roboto', fontSize: 11 },
+                content: content
+            };
+
+            // Генерация и отправка/скачивание
+            const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+            pdfDocGenerator.getBlob(async (pdfBlob) => {
+                try {
+                    const file = new File([pdfBlob], 'Smeta_Otoplenie.pdf', { type: 'application/pdf' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
                         await navigator.share({
                             files: [file],
                             title: 'Смета (Отопление/Вода)',
                             text: 'Высылаю предварительную смету на монтажные работы и оборудование.'
                         });
-                    } catch (shareErr) {
-                        console.log('Share failed, reverting to download:', shareErr);
-                        doc.save('Smeta_Otoplenie.pdf');
+                    } else {
+                        pdfDocGenerator.download('Smeta_Otoplenie.pdf');
                     }
-                } else {
-                    doc.save('Smeta_Otoplenie.pdf');
+                } catch (shareErr) {
+                    console.log('Share cancelled/failed:', shareErr);
+                    pdfDocGenerator.download('Smeta_Otoplenie.pdf');
                 }
-            } catch (fileErr) {
-                // Фолбэк, если браузер (старый iOS Safari) не разрешает конструктор File
-                console.log('File constructor failed:', fileErr);
-                doc.save('Smeta_Otoplenie.pdf');
-            }
+                btn.innerText = origText;
+                btn.disabled = false;
+            });
 
         } catch(err) {
             console.error('PDF error:', err);
             alert('Ошибка при создании PDF: ' + err.message);
-        } finally {
             btn.innerText = origText;
             btn.disabled = false;
         }
