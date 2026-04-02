@@ -884,61 +884,68 @@
             const content = [];
 
             // Заголовок
-            content.push({ text: 'Предварительная смета', fontSize: 20, bold: true, alignment: 'center', margin: [0, 0, 0, 2] });
-            content.push({ text: today, fontSize: 10, color: '#999999', alignment: 'center', margin: [0, 0, 0, 16] });
+            content.push({ text: 'Предварительная смета', fontSize: 20, bold: true, alignment: 'center', margin: [0, 0, 0, 1] });
+            content.push({ text: today, fontSize: 10, color: '#999999', alignment: 'center', margin: [0, 0, 0, 10] });
 
             // Клиент
             if (clientName || clientAddress) {
-                if (clientName) content.push({ text: [{ text: 'Клиент: ', bold: true }, clientName], fontSize: 10, margin: [0, 0, 0, 2] });
-                if (clientAddress) content.push({ text: [{ text: 'Адрес объекта: ', bold: true }, clientAddress], fontSize: 10, margin: [0, 0, 0, 2] });
-                content.push({ text: '', margin: [0, 0, 0, 10] });
+                if (clientName) content.push({ text: [{ text: 'Клиент: ', bold: true }, clientName], fontSize: 10, margin: [0, 0, 0, 1] });
+                if (clientAddress) content.push({ text: [{ text: 'Адрес объекта: ', bold: true }, clientAddress], fontSize: 10, margin: [0, 0, 0, 1] });
             }
 
-            // Параметры объекта
+            // Параметры объекта — через таблицу с верхней границей
             content.push({
-                canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: navy }],
-                margin: [0, 0, 0, 6]
+                margin: [0, 8, 0, 0],
+                table: {
+                    widths: ['*'],
+                    body: [[{ text: 'Параметры объекта', bold: true, fontSize: 12, color: navy, border: [false, true, false, false], borderColor: [null, navy, null, null] }]]
+                },
+                layout: { hLineWidth: (i) => i === 0 ? 1.5 : 0, vLineWidth: () => 0, hLineColor: () => navy, paddingTop: () => 5, paddingBottom: () => 2, paddingLeft: () => 0, paddingRight: () => 0 }
             });
-            content.push({ text: 'Параметры объекта', bold: true, fontSize: 12, color: navy, margin: [0, 0, 0, 6] });
-            content.push({ text: paramsText.join('   |   '), fontSize: 10, color: navy, margin: [0, 0, 0, 12] });
+            content.push({ text: paramsText.join('   |   '), fontSize: 10, color: navy, margin: [0, 2, 0, 6] });
 
             // Секции
             content.push(...makeSection('Оборудование', eqTotal, eqItems, true));
             content.push(...makeSection('Материалы', matTotal, matItems, false));
             content.push(...makeSection('Монтажные работы', workTotal, workItems, false));
 
-            // ИТОГО
+            // ИТОГО — через таблицу с верхней границей
             content.push({
-                canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 2, lineColor: navy }],
-                margin: [0, 10, 0, 8]
-            });
-            content.push({ text: 'ИТОГО: ' + totalText, fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 4] });
-            content.push({ text: 'Ориентировочный срок: ' + timeText, fontSize: 10, color: grey, alignment: 'center', margin: [0, 0, 0, 14] });
-
-            // Предупреждение
-            content.push({
+                margin: [0, 8, 0, 0],
                 table: {
                     widths: ['*'],
                     body: [[{
                         stack: [
-                            { text: 'Предварительный расчет стоимости', bold: true, fontSize: 11, margin: [0, 0, 0, 3] },
+                            { text: 'ИТОГО: ' + totalText, fontSize: 18, bold: true, alignment: 'center', margin: [0, 4, 0, 2] },
+                            { text: 'Ориентировочный срок: ' + timeText, fontSize: 10, color: grey, alignment: 'center', margin: [0, 0, 0, 4] }
+                        ],
+                        border: [false, true, false, false],
+                        borderColor: [null, navy, null, null]
+                    }]]
+                },
+                layout: { hLineWidth: (i) => i === 0 ? 2 : 0, vLineWidth: () => 0, hLineColor: () => navy, paddingTop: () => 0, paddingBottom: () => 0, paddingLeft: () => 0, paddingRight: () => 0 }
+            });
+
+            // Предупреждение
+            content.push({
+                margin: [0, 8, 0, 8],
+                table: {
+                    widths: ['*'],
+                    body: [[{
+                        stack: [
+                            { text: 'Предварительный расчет стоимости', bold: true, fontSize: 11, margin: [0, 0, 0, 2] },
                             { text: 'Стоимость в данном КП является ориентировочной и рассчитана на основании предоставленных данных. Итоговая стоимость определяется после уточнения технических деталей и осмотра объекта.', fontSize: 9 }
                         ],
                         fillColor: '#f7f7f4',
                         color: '#6b4900',
-                        margin: [10, 8, 10, 8]
+                        margin: [8, 6, 8, 6]
                     }]]
                 },
-                layout: {
-                    hLineWidth: () => 0,
-                    vLineWidth: (i) => i === 0 ? 3 : 0,
-                    vLineColor: () => '#e8a020'
-                },
-                margin: [0, 0, 0, 14]
+                layout: { hLineWidth: () => 0, vLineWidth: (i) => i === 0 ? 3 : 0, vLineColor: () => '#e8a020' }
             });
 
             // Условия работы
-            content.push({ text: 'Условия работы', bold: true, fontSize: 12, color: navy, margin: [0, 0, 0, 6] });
+            content.push({ text: 'Условия работы', bold: true, fontSize: 12, color: navy, margin: [0, 0, 0, 3] });
             content.push({
                 ul: [
                     'Используемые материалы: Rehau, TECE, Stout, Valtec.',
@@ -946,14 +953,26 @@
                     'Гарантия 3 года на все соединения и систему «под ключ».',
                     'Фото- и видеофиксация скрытых работ перед закрытием коммуникаций.'
                 ],
-                fontSize: 10, color: grey, lineHeight: 1.5,
-                margin: [0, 0, 0, 16]
+                fontSize: 10, color: grey, lineHeight: 1.4,
+                margin: [0, 0, 0, 10]
             });
 
             // Срок действия + контакт
-            content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#dddddd' }], margin: [0, 0, 0, 8] });
-            content.push({ text: 'Смета действительна до ' + validUntil, fontSize: 9, color: grey, alignment: 'center', margin: [0, 0, 0, 4] });
-            content.push({ text: 'Александр +7 950 654-43-37', fontSize: 9, color: grey, alignment: 'right' });
+            content.push({
+                margin: [0, 0, 0, 0],
+                table: {
+                    widths: ['*'],
+                    body: [[{
+                        stack: [
+                            { text: 'Смета действительна до ' + validUntil, fontSize: 9, color: grey, alignment: 'center', margin: [0, 4, 0, 2] },
+                            { text: 'Александр +7 950 654-43-37', fontSize: 9, color: grey, alignment: 'right', margin: [0, 0, 0, 0] }
+                        ],
+                        border: [false, true, false, false],
+                        borderColor: [null, '#dddddd', null, null]
+                    }]]
+                },
+                layout: { hLineWidth: (i) => i === 0 ? 0.5 : 0, vLineWidth: () => 0, hLineColor: () => '#dddddd', paddingTop: () => 0, paddingBottom: () => 0, paddingLeft: () => 0, paddingRight: () => 0 }
+            });
 
             // ---- Страница 2: фото работ ----
             const photos = [];
