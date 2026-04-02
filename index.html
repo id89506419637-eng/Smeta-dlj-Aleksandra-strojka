@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Калькулятор</title>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -33,6 +33,9 @@
             padding: 20px 15px;
             display: flex;
             justify-content: center;
+            font-family: 'Manrope', sans-serif;
+            letter-spacing: 0;
+            font-stretch: normal;
         }
 
         .container {
@@ -71,8 +74,10 @@
         }
 
         h2.section-title {
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
             margin-bottom: 15px;
             display: flex;
             align-items: center;
@@ -183,8 +188,8 @@
         }
 
         .total-price {
-            font-size: 1.6rem;
-            font-weight: 700;
+            font-size: 28px;
+            font-weight: 800;
             color: #1a1a1a;
             text-align: center;
             margin: 15px 0;
@@ -211,19 +216,26 @@
         }
 
         .breakdown-label {
-            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #1a3a5c;
         }
 
         .breakdown-value {
+            font-size: 14px;
             font-weight: 600;
+            color: #1a1a1a;
         }
 
         .info-box {
-            background: rgba(59, 130, 246, 0.1);
+            background: #f7f7f4;
             border-radius: 8px;
+            border-left: 3px solid #e8a020;
             padding: 12px;
             font-size: 0.85rem;
-            color: #1e40af;
+            color: #6b4900;
             margin-top: 15px;
         }
 
@@ -241,13 +253,14 @@
         .breakdown-sublist {
             padding-left: 10px;
             margin-bottom: 15px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            font-size: 14px;
+            color: #333;
             line-height: 1.4;
         }
         .breakdown-sublist div {
-            padding: 3px 0;
+            padding: 9px 0;
             border-bottom: 1px dashed rgba(226, 232, 240, 0.5);
+            font-weight: 400;
         }
         .breakdown-sublist div:last-child {
             border-bottom: none;
@@ -445,10 +458,10 @@
             Оценки включают запас 10% на трубы и фитинги по спецификации. Окончательная смета формируется только после детальных замеров на объекте.
         </div>
 
-        <div style="font-size:0.85rem;color:var(--text-muted);margin-top:15px;text-align:center;" id="validity-date">
+        <div style="font-size:13px;color:#777;margin-top:15px;text-align:center;" id="validity-date">
         </div>
 
-        <div style="font-size:0.85rem;color:var(--text-muted);margin-top:10px;text-align:right;">
+        <div style="font-size:14px;font-weight:700;color:#1a3a5c;margin-top:10px;text-align:right;">
             Александр +7 950 654-43-37
         </div>
 
@@ -647,9 +660,11 @@
             addWork(`Обвязка скважины (монтаж)`, 25000);
         }
 
-        // Итоговые коэффициенты
-        if (floors === 2) work *= 1.15;
-        if (floors === 3) work *= 1.30;
+        // Итоговые коэффициенты этажности (только для ангаров/гаражей)
+        if (roomType === 'hangar' || roomType === 'garage') {
+            if (floors === 2) work *= 1.15;
+            if (floors === 3) work *= 1.30;
+        }
 
         // Расчет вилки (от -10% до +15%)
         const totalBase = Math.round(equipment + materials + work);
@@ -775,7 +790,7 @@
             const matTotal = document.getElementById('res-materials').innerText;
             const workTotal = document.getElementById('res-work').innerText;
 
-            const chipStyle = 'display:inline-block;background:#e8edf3;border-radius:6px;padding:5px 12px;font-size:12px;color:#1e293b;';
+            const chipStyle = 'display:inline-block;background:#eef2f7;color:#1a3a5c;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;';
             let paramsRows = `<span style="${chipStyle}">Тип: ${roomLabel}</span>
                 <span style="${chipStyle}">Площадь: ${area} м²</span>
                 <span style="${chipStyle}">Этажей: ${floors}</span>
@@ -790,7 +805,7 @@
             function grabList(listId) {
                 let h = '';
                 document.getElementById(listId).querySelectorAll('div').forEach(el => {
-                    h += `<div style="padding:2px 0 2px 8px;color:#555;font-size:11px">${el.innerText}</div>`;
+                    h += `<div style="padding:9px 0 9px 8px;color:#333;font-size:14px;font-weight:400;border-bottom:1px solid #eee;">${el.innerText}</div>`;
                 });
                 return h;
             }
@@ -815,37 +830,37 @@
                 <p style="text-align:center;color:#999;font-size:12px;margin:0 0 22px">${new Date().toLocaleDateString('ru-RU')}</p>
                 ${clientBlock}
                 <div style="border-top:2px solid #1a3a5c;padding-top:14px;margin-bottom:18px">
-                    <div style="color:#1a3a5c;font-weight:700;font-size:14px;margin-bottom:10px">Параметры объекта</div>
+                    <div style="color:#1a3a5c;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px">Параметры объекта</div>
                     <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;">${paramsRows}</div>
                 </div>
                 <div style="border-top:2px solid #1a3a5c;padding-top:12px;margin-bottom:12px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#1a3a5c;font-weight:700;font-size:13px">Оборудование</span><span style="font-weight:700;font-size:13px">${eqTotal}</span></div>
+                    <div style="display:flex;justify-content:space-between"><span style="color:#1a3a5c;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.12em">Оборудование</span><span style="font-weight:600;font-size:14px;color:#1a1a1a">${eqTotal}</span></div>
                     ${grabList('list-equipment')}
                 </div>
                 <div style="border-top:1px solid #ddd;padding-top:10px;margin-bottom:12px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#1a3a5c;font-weight:700;font-size:13px">Материалы</span><span style="font-weight:700;font-size:13px">${matTotal}</span></div>
+                    <div style="display:flex;justify-content:space-between"><span style="color:#1a3a5c;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.12em">Материалы</span><span style="font-weight:600;font-size:14px;color:#1a1a1a">${matTotal}</span></div>
                     ${grabList('list-materials')}
                 </div>
                 <div style="border-top:1px solid #ddd;padding-top:10px;margin-bottom:18px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#1a3a5c;font-weight:700;font-size:13px">Монтажные работы</span><span style="font-weight:700;font-size:13px">${workTotal}</span></div>
+                    <div style="display:flex;justify-content:space-between"><span style="color:#1a3a5c;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.12em">Монтажные работы</span><span style="font-weight:600;font-size:14px;color:#1a1a1a">${workTotal}</span></div>
                     ${grabList('list-work')}
                 </div>
                 <div style="border-top:3px solid #1a3a5c;padding:16px 0;text-align:center">
                     <div style="font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:4px">ИТОГО: ${totalText}</div>
                     <div style="font-size:13px;color:#475569">Ориентировочный срок: ${timeText}</div>
                 </div>
-                <div style="background:#eff6ff;border-radius:6px;padding:12px 16px;margin-top:16px;font-size:13px;color:#1e40af;line-height:1.5;">
+                <div style="background:#f7f7f4;border-radius:6px;padding:12px 16px;margin-top:16px;font-size:13px;color:#6b4900;line-height:1.5;border-left:3px solid #e8a020;">
                     <strong style="font-size:14px;display:block;margin-bottom:4px;">Предварительный расчет стоимости</strong>
                     Стоимость в данном КП является ориентировочной и рассчитана на основании предоставленных данных. Итоговая стоимость определяется после уточнения технических деталей и осмотра объекта.
                 </div>
                 <div style="border-top:1px solid #ddd;padding-top:16px;margin-top:20px;">
                     <div style="color:#1a3a5c;font-weight:700;font-size:14px;margin-bottom:8px;">Условия работы</div>
-                    <ul style="font-size:13px;color:#475569;line-height:1.6;margin:0;padding-left:15px;">
-                        <li style="margin-bottom:6px;">Используемые материалы: Rehau, TECE, Stout, Valtec.</li>
-                        <li style="margin-bottom:6px;">Монтаж выполняется специализированным инструментом с соблюдением технологий.</li>
-                        <li style="margin-bottom:6px;">Гарантия 3 года на все соединения и систему «под ключ».</li>
-                        <li>Фото- и видеофиксация скрытых работ перед закрытием коммуникаций.</li>
-                    </ul>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;color:#475569;line-height:1.6;">
+                        <div>• Используемые материалы: Rehau, TECE, Stout, Valtec.</div>
+                        <div>• Монтаж выполняется специализированным инструментом с соблюдением технологий.</div>
+                        <div>• Гарантия 3 года на все соединения и систему «под ключ».</div>
+                        <div>• Фото- и видеофиксация скрытых работ перед закрытием коммуникаций.</div>
+                    </div>
                 </div>
                 <div style="margin-top:20px;padding-top:12px;border-top:1px solid #ddd;font-size:12px;color:#475569;text-align:center;">
                     Смета действительна до ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'})}
