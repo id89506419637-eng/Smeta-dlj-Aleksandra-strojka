@@ -790,7 +790,7 @@
             const matTotal = document.getElementById('res-materials').innerText;
             const workTotal = document.getElementById('res-work').innerText;
 
-            const chipStyle = 'display:inline-block;background:#f0f4f8;color:#001f5c;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;';
+            const chipStyle = 'display:inline-block;background:#f0f4f8;color:#001f5c;border-radius:20px;padding:6px 14px;font-size:14px;font-weight:600;';
             let paramsRows = `<span style="${chipStyle}">Тип: ${roomLabel}</span>
                 <span style="${chipStyle}">Площадь: ${area} м²</span>
                 <span style="${chipStyle}">Этажей: ${floors}</span>
@@ -805,7 +805,7 @@
             function grabList(listId) {
                 let h = '';
                 document.getElementById(listId).querySelectorAll('div').forEach(el => {
-                    h += `<div style="padding:9px 0 9px 8px;color:#333;font-size:14px;font-weight:400;border-bottom:1px solid #eee;">${el.innerText}</div>`;
+                    h += `<div style="padding:9px 0 9px 8px;color:#333;font-size:15px;font-weight:400;border-bottom:1px solid #eee;">${el.innerText}</div>`;
                 });
                 return h;
             }
@@ -825,24 +825,24 @@
             }
 
             smetaDiv.innerHTML = `
-            <div style="font-family:'Times New Roman', Times, serif;width:794px;padding:45px 50px;background:#fff;color:#1e293b">
+            <div style="font-family:'Times New Roman', Times, serif;letter-spacing:-0.4px;width:794px;padding:45px 50px;background:#fff;color:#1e293b">
                 <h1 style="text-align:center;font-size:24px;margin:0 0 4px;font-weight:700;">Предварительная смета</h1>
-                <p style="text-align:center;color:#999;font-size:12px;margin:0 0 22px">${new Date().toLocaleDateString('ru-RU')}</p>
+                <p style="text-align:center;color:#999;font-size:13px;margin:0 0 22px">${new Date().toLocaleDateString('ru-RU')}</p>
                 ${clientBlock}
                 <div style="border-top:2px solid #001f5c;padding-top:14px;margin-bottom:18px">
-                    <div style="color:#001f5c;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px">Параметры объекта</div>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;">${paramsRows}</div>
+                    <div style="color:#001f5c;font-weight:700;font-size:15px;margin-bottom:10px">Параметры объекта</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:14px;">${paramsRows}</div>
                 </div>
                 <div style="border-top:2px solid #001f5c;padding-top:12px;margin-bottom:12px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#001f5c;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.12em">Оборудование</span><span style="font-weight:600;font-size:14px;color:#1a1a1a">${eqTotal}</span></div>
+                    <div style="display:flex;justify-content:space-between"><span style="color:#001f5c;font-weight:700;font-size:15px;">Оборудование</span><span style="font-weight:700;font-size:15px;color:#1a1a1a">${eqTotal}</span></div>
                     ${grabList('list-equipment')}
                 </div>
                 <div style="border-top:1px solid #ddd;padding-top:10px;margin-bottom:12px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#001f5c;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.12em">Материалы</span><span style="font-weight:600;font-size:14px;color:#1a1a1a">${matTotal}</span></div>
+                    <div style="display:flex;justify-content:space-between"><span style="color:#001f5c;font-weight:700;font-size:15px;">Материалы</span><span style="font-weight:700;font-size:15px;color:#1a1a1a">${matTotal}</span></div>
                     ${grabList('list-materials')}
                 </div>
                 <div style="border-top:1px solid #ddd;padding-top:10px;margin-bottom:18px">
-                    <div style="display:flex;justify-content:space-between"><span style="color:#001f5c;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.12em">Монтажные работы</span><span style="font-weight:600;font-size:14px;color:#1a1a1a">${workTotal}</span></div>
+                    <div style="display:flex;justify-content:space-between"><span style="color:#001f5c;font-weight:700;font-size:15px;">Монтажные работы</span><span style="font-weight:700;font-size:15px;color:#1a1a1a">${workTotal}</span></div>
                     ${grabList('list-work')}
                 </div>
                 <div style="border-top:3px solid #001f5c;padding:16px 0;text-align:center">
@@ -854,8 +854,8 @@
                     Стоимость в данном КП является ориентировочной и рассчитана на основании предоставленных данных. Итоговая стоимость определяется после уточнения технических деталей и осмотра объекта.
                 </div>
                 <div style="border-top:1px solid #ddd;padding-top:16px;margin-top:20px;">
-                    <div style="color:#001f5c;font-weight:700;font-size:14px;margin-bottom:8px;">Условия работы</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;color:#475569;line-height:1.6;">
+                    <div style="color:#001f5c;font-weight:700;font-size:15px;margin-bottom:8px;">Условия работы</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:15px;color:#475569;line-height:1.6;">
                         <div>• Используемые материалы: Rehau, TECE, Stout, Valtec.</div>
                         <div>• Монтаж выполняется специализированным инструментом с соблюдением технологий.</div>
                         <div>• Гарантия 3 года на все соединения и систему «под ключ».</div>
