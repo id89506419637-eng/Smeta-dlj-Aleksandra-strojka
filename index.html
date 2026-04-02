@@ -812,7 +812,7 @@
 
             // HTML-шаблон сметы (только текст, без фото)
             const smetaDiv = document.createElement('div');
-            smetaDiv.style.cssText = 'position:absolute;left:0;top:0;z-index:-1;opacity:0;pointer-events:none';
+            smetaDiv.style.cssText = 'position:fixed;left:-9999px;top:0;pointer-events:none;';
             const clientName = document.getElementById('clientName').value.trim();
             const clientAddress = document.getElementById('clientAddress').value.trim();
 
@@ -871,9 +871,13 @@
             </div>`;
             document.body.appendChild(smetaDiv);
 
-            // Ждём загрузки шрифта PT Sans Narrow перед рендерингом
+            // Принудительно загружаем PT Sans Narrow перед рендерингом
+            await Promise.all([
+                document.fonts.load('400 16px "PT Sans Narrow"'),
+                document.fonts.load('700 16px "PT Sans Narrow"')
+            ]);
             await document.fonts.ready;
-            await new Promise(r => setTimeout(r, 200));
+            await new Promise(r => setTimeout(r, 300));
 
             const canvas = await html2canvas(smetaDiv.firstElementChild, {
                 scale: 2,
