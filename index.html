@@ -829,12 +829,12 @@
                     const lastColon = item.lastIndexOf(':');
                     if (lastColon > 0) {
                         return [
-                            { text: item.substring(0, lastColon).trim(), fontSize: 10, color: '#333', margin: [8, 3, 0, 3] },
-                            { text: item.substring(lastColon + 1).trim(), fontSize: 10, color: '#333', alignment: 'right', margin: [0, 3, 0, 3] }
+                            { text: item.substring(0, lastColon).trim(), fontSize: 9, color: '#333', margin: [8, 1, 0, 1] },
+                            { text: item.substring(lastColon + 1).trim(), fontSize: 9, color: '#333', alignment: 'right', margin: [0, 1, 0, 1] }
                         ];
                     }
                     return [
-                        { text: item, fontSize: 10, color: '#333', colSpan: 2, margin: [8, 3, 0, 3] }, {}
+                        { text: item, fontSize: 9, color: '#333', colSpan: 2, margin: [8, 1, 0, 1] }, {}
                     ];
                 });
             }
@@ -844,19 +844,19 @@
                 const block = [];
                 // Заголовок секции
                 block.push({
-                    margin: [0, 6, 0, 0],
+                    margin: [0, 4, 0, 0],
                     table: {
                         widths: ['*', 'auto'],
                         body: [[
-                            { text: title, bold: true, fontSize: 12, color: navy },
-                            { text: total, bold: true, fontSize: 12, alignment: 'right' }
+                            { text: title, bold: true, fontSize: 11, color: navy },
+                            { text: total, bold: true, fontSize: 11, alignment: 'right' }
                         ]]
                     },
                     layout: {
                         hLineWidth: (i) => i === 0 ? (topBorder ? 1.5 : 0.5) : 0,
                         vLineWidth: () => 0,
                         hLineColor: () => topBorder ? navy : '#dddddd',
-                        paddingTop: () => 6, paddingBottom: () => 4,
+                        paddingTop: () => 4, paddingBottom: () => 2,
                         paddingLeft: () => 0, paddingRight: () => 0
                     }
                 });
@@ -884,25 +884,25 @@
             const content = [];
 
             // Заголовок
-            content.push({ text: 'Предварительная смета', fontSize: 20, bold: true, alignment: 'center', margin: [0, 0, 0, 1] });
-            content.push({ text: today, fontSize: 10, color: '#999999', alignment: 'center', margin: [0, 0, 0, 10] });
+            content.push({ text: 'Предварительная смета', fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 1] });
+            content.push({ text: today, fontSize: 9, color: '#999999', alignment: 'center', margin: [0, 0, 0, 6] });
 
             // Клиент
             if (clientName || clientAddress) {
-                if (clientName) content.push({ text: [{ text: 'Клиент: ', bold: true }, clientName], fontSize: 10, margin: [0, 0, 0, 1] });
-                if (clientAddress) content.push({ text: [{ text: 'Адрес объекта: ', bold: true }, clientAddress], fontSize: 10, margin: [0, 0, 0, 1] });
+                if (clientName) content.push({ text: [{ text: 'Клиент: ', bold: true }, clientName], fontSize: 9, margin: [0, 0, 0, 1] });
+                if (clientAddress) content.push({ text: [{ text: 'Адрес объекта: ', bold: true }, clientAddress], fontSize: 9, margin: [0, 0, 0, 1] });
             }
 
             // Параметры объекта — через таблицу с верхней границей
             content.push({
-                margin: [0, 8, 0, 0],
+                margin: [0, 5, 0, 0],
                 table: {
                     widths: ['*'],
-                    body: [[{ text: 'Параметры объекта', bold: true, fontSize: 12, color: navy, border: [false, true, false, false], borderColor: [null, navy, null, null] }]]
+                    body: [[{ text: 'Параметры объекта', bold: true, fontSize: 11, color: navy, border: [false, true, false, false], borderColor: [null, navy, null, null] }]]
                 },
-                layout: { hLineWidth: (i) => i === 0 ? 1.5 : 0, vLineWidth: () => 0, hLineColor: () => navy, paddingTop: () => 5, paddingBottom: () => 2, paddingLeft: () => 0, paddingRight: () => 0 }
+                layout: { hLineWidth: (i) => i === 0 ? 1.5 : 0, vLineWidth: () => 0, hLineColor: () => navy, paddingTop: () => 4, paddingBottom: () => 1, paddingLeft: () => 0, paddingRight: () => 0 }
             });
-            content.push({ text: paramsText.join('   |   '), fontSize: 10, color: navy, margin: [0, 2, 0, 6] });
+            content.push({ text: paramsText.join('   |   '), fontSize: 9, color: navy, margin: [0, 1, 0, 4] });
 
             // Секции
             content.push(...makeSection('Оборудование', eqTotal, eqItems, true));
@@ -911,13 +911,13 @@
 
             // ИТОГО — через таблицу с верхней границей
             content.push({
-                margin: [0, 8, 0, 0],
+                margin: [0, 6, 0, 0],
                 table: {
                     widths: ['*'],
                     body: [[{
                         stack: [
-                            { text: 'ИТОГО: ' + totalText, fontSize: 18, bold: true, alignment: 'center', margin: [0, 4, 0, 2] },
-                            { text: 'Ориентировочный срок: ' + timeText, fontSize: 10, color: grey, alignment: 'center', margin: [0, 0, 0, 4] }
+                            { text: 'ИТОГО: ' + totalText, fontSize: 16, bold: true, alignment: 'center', margin: [0, 3, 0, 1] },
+                            { text: 'Ориентировочный срок: ' + timeText, fontSize: 9, color: grey, alignment: 'center', margin: [0, 0, 0, 3] }
                         ],
                         border: [false, true, false, false],
                         borderColor: [null, navy, null, null]
@@ -928,24 +928,24 @@
 
             // Предупреждение
             content.push({
-                margin: [0, 8, 0, 8],
+                margin: [0, 5, 0, 5],
                 table: {
                     widths: ['*'],
                     body: [[{
                         stack: [
-                            { text: 'Предварительный расчет стоимости', bold: true, fontSize: 11, margin: [0, 0, 0, 2] },
-                            { text: 'Стоимость в данном КП является ориентировочной и рассчитана на основании предоставленных данных. Итоговая стоимость определяется после уточнения технических деталей и осмотра объекта.', fontSize: 9 }
+                            { text: 'Предварительный расчет стоимости', bold: true, fontSize: 10, margin: [0, 0, 0, 1] },
+                            { text: 'Стоимость в данном КП является ориентировочной и рассчитана на основании предоставленных данных. Итоговая стоимость определяется после уточнения технических деталей и осмотра объекта.', fontSize: 8 }
                         ],
                         fillColor: '#f7f7f4',
                         color: '#6b4900',
-                        margin: [8, 6, 8, 6]
+                        margin: [6, 4, 6, 4]
                     }]]
                 },
                 layout: { hLineWidth: () => 0, vLineWidth: (i) => i === 0 ? 3 : 0, vLineColor: () => '#e8a020' }
             });
 
             // Условия работы
-            content.push({ text: 'Условия работы', bold: true, fontSize: 12, color: navy, margin: [0, 0, 0, 3] });
+            content.push({ text: 'Условия работы', bold: true, fontSize: 11, color: navy, margin: [0, 0, 0, 2] });
             content.push({
                 ul: [
                     'Используемые материалы: Rehau, TECE, Stout, Valtec.',
@@ -953,8 +953,8 @@
                     'Гарантия 3 года на все соединения и систему «под ключ».',
                     'Фото- и видеофиксация скрытых работ перед закрытием коммуникаций.'
                 ],
-                fontSize: 10, color: grey, lineHeight: 1.3,
-                margin: [0, 0, 0, 6]
+                fontSize: 9, color: grey, lineHeight: 1.2,
+                margin: [0, 0, 0, 4]
             });
 
             // Срок действия + контакт (одна строка)
