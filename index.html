@@ -667,8 +667,8 @@
 
         // Расчет вилки (от -10% до +15%)
         const totalBase = Math.round(equipment + materials + work);
-        const minTotal = Math.round(totalBase * 0.9);
-        const maxTotal = Math.round(totalBase * 1.15);
+        const minTotal = Math.round(totalBase * 0.9 / 1000) * 1000;
+        const maxTotal = Math.round(totalBase * 1.15 / 1000) * 1000;
 
         // Строки
         document.getElementById('res-equipment').innerText = `${fmt(equipment)} ₽`;
